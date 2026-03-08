@@ -1,0 +1,246 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8 space-y-12">
+
+    <div class="border-b border-zinc-300 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+            <h1 class="text-3xl font-black uppercase tracking-tighter text-zinc-900">Identity & Settings</h1>
+            <p class="text-zinc-600 font-medium mt-2">Manage your digital presence and platform preferences.</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="px-4 py-2 bg-zinc-100 border border-zinc-200 rounded-md">
+                <p class="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-0.5">Your Active Alias</p>
+                <p class="text-sm font-black text-zinc-900">{{ profile.chat_alias }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="message-container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-6 p-4 rounded-md text-xs font-black uppercase tracking-widest {% if message.tags == 'success' %}bg-green-50 text-green-700 border-green-200{% else %}bg-red-50 text-red-700 border-red-200{% endif %} border">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
+        <div class="lg:col-span-2 space-y-10">
+            <form id="profileForm" method="POST" class="space-y-12">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="update_preferences">
+
+                <section class="space-y-6">
+                    <h2 class="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 flex items-center gap-2">
+                        <i class="ph-fill ph-identification-card text-lg"></i> System Identity
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div class="group">
+                            <label class="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Username (Permanent)</label>
+                            <div class="relative">
+                                <input type="text" value="{{ user.username }}" disabled
+                                       class="w-full p-4 bg-zinc-100 border border-zinc-200 rounded-md text-zinc-400 font-black uppercase text-xs cursor-not-allowed">
+                                <i class="ph ph-lock absolute right-4 top-1/2 -translate-y-1/2 text-zinc-300"></i>
+                            </div>
+                        </div>
+
+                        <div class="group">
+                            <label class="block text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1.5 ml-1">Verified Email Address</label>
+                            <input type="email" name="email" value="{{ user.email }}" required
+                                   class="w-full p-4 bg-white border border-zinc-300 rounded-md focus:outline-none focus:border-zinc-950 font-bold text-sm transition-all focus:ring-1 focus:ring-zinc-950">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="bg-white border border-zinc-200 p-6 md:p-8 rounded-md space-y-8">
+                    <h2 class="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-950 flex items-center gap-2 border-b border-zinc-100 pb-4">
+                        <i class="ph-fill ph-gear-six text-lg"></i> Experience & Privacy
+                    </h2>
+
+                    <div class="flex flex-col gap-10">
+                        <div class="space-y-4">
+                            <label class="block text-[9px] font-black text-zinc-500 uppercase tracking-widest ml-1">
+                                Interface & Analysis Language
+                            </label>
+
+                            <input type="hidden" name="language" id="languageInput" value="{{ profile.language }}">
+
+                            <div class="flex flex-col sm:flex-row gap-2 bg-zinc-100 p-1 rounded-md border border-zinc-200 w-full max-w-lg">
+                                <button type="button" onclick="selectLanguage('en')" id="lang-en"
+                                        class="lang-btn flex-1 py-3 px-4 rounded-md font-black uppercase tracking-widest text-[10px] transition-all
+                                        {% if profile.language == 'en' %}bg-zinc-950 text-white hover:text-white{% else %}bg-transparent text-zinc-500 hover:text-zinc-950{% endif %}">
+                                    English
+                                </button>
+
+                                <button type="button" onclick="selectLanguage('sw')" id="lang-sw"
+                                        class="lang-btn flex-1 py-3 px-4 rounded-md font-black uppercase tracking-widest text-[10px] transition-all
+                                        {% if profile.language == 'sw' %}bg-zinc-950 text-white hover:text-white{% else %}bg-transparent text-zinc-500 hover:text-zinc-950{% endif %}">
+                                    Kiswahili
+                                </button>
+
+                                <button type="button" onclick="selectLanguage('sh')" id="lang-sh"
+                                        class="lang-btn flex-1 py-3 px-4 rounded-md font-black uppercase tracking-widest text-[10px] transition-all
+                                        {% if profile.language == 'sh' %}bg-zinc-950 text-white hover:text-white{% else %}bg-transparent text-zinc-500 hover:text-zinc-950{% endif %}">
+                                    Sheng
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <label class="flex items-start gap-4 cursor-pointer group p-3 -ml-3 rounded-md hover:bg-zinc-50 transition">
+                                <div class="relative flex items-center">
+                                    <input type="checkbox" name="use_alias" {% if profile.use_alias %}checked{% endif %}
+                                           class="w-5 h-5 border-zinc-300 rounded-md text-zinc-950 focus:ring-offset-0 focus:ring-zinc-950">
+                                </div>
+                                <div class="flex flex-col leading-none">
+                                    <span class="text-xs font-black uppercase text-zinc-900 tracking-tight group-hover:text-red-600 transition">Forced Anonymity</span>
+                                    <span class="text-[10px] text-zinc-500 font-medium leading-relaxed mt-1.5">Always hide your real name. You appear as <strong class="text-zinc-950">{{ profile.chat_alias }}</strong>.</span>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start gap-4 cursor-pointer group p-3 -ml-3 rounded-md hover:bg-zinc-50 transition">
+                                <div class="relative flex items-center">
+                                    <input type="checkbox" name="email_notifications" {% if profile.email_notifications %}checked{% endif %}
+                                           class="w-5 h-5 border-zinc-300 rounded-md text-zinc-950 focus:ring-offset-0 focus:ring-zinc-950">
+                                </div>
+                                <div class="flex flex-col leading-none">
+                                    <span class="text-xs font-black uppercase text-zinc-900 tracking-tight group-hover:text-red-600 transition">Legislation Alerts</span>
+                                    <span class="text-[10px] text-zinc-500 font-medium leading-relaxed mt-1.5">Receive a ping when new bills are uploaded to the Directory.</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="flex justify-start">
+                    <button type="submit" class="bg-zinc-950 text-white px-10 py-4 rounded-md font-black uppercase tracking-[0.2em] text-[10px] hover:bg-black transition-all active:scale-95">
+                        Save All Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-zinc-900 text-white p-6 rounded-md border border-zinc-800">
+                <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-red-500 mb-4">Security Center</h3>
+                <p class="text-xs text-zinc-400 font-medium leading-relaxed mb-6">
+                    Keep your perspective safe. We recommend updating your password every 90 days.
+                </p>
+                <button onclick="togglePasswordModal(true)" class="w-full bg-white text-zinc-950 px-4 py-3 rounded-md font-black uppercase tracking-widest text-[10px] hover:bg-zinc-200 transition">
+                    Change Password
+                </button>
+            </div>
+
+            <div class="p-6 border border-zinc-200 rounded-md bg-zinc-50">
+                <p class="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-2">Alias Integrity</p>
+                <p class="text-[11px] text-zinc-600 font-medium italic">"Your alias is unique to your digital thumbprint and cannot be changed."</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="passwordModal" class="fixed inset-0 z-[10000] hidden flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-sm transition-opacity">
+    <div class="bg-white w-full max-w-md rounded-md overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+
+        <div class="bg-zinc-950 text-white px-6 py-4 flex justify-between items-center">
+            <h3 class="font-black uppercase tracking-widest text-xs">Update Password</h3>
+            <button onclick="togglePasswordModal(false)" class="text-zinc-400 hover:text-white transition">
+                <i class="ph ph-x text-xl"></i>
+            </button>
+        </div>
+
+        <form id="passwordForm" method="POST" class="p-6 space-y-6">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="change_password">
+
+            {% for field in password_form %}
+                <div class="relative">
+                    <label class="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1.5 ml-1">{{ field.label }}</label>
+                    <div class="relative group">
+                        {{ field }}
+                        <button type="button" onclick="togglePasswordVisibility(this)"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-950 transition">
+                            <i class="ph ph-eye text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+
+            <div id="password-error" class="hidden p-3 bg-red-50 text-red-600 text-[10px] font-black uppercase rounded-md border border-red-200"></div>
+        </form>
+
+        <div class="bg-zinc-50 p-4 border-t border-zinc-200 flex gap-3">
+            <button onclick="togglePasswordModal(false)" class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-zinc-950 transition">
+                Cancel
+            </button>
+            <button type="button" onclick="submitPasswordForm()" class="flex-1 py-3 bg-zinc-950 text-white rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-black transition">
+                Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('input[type="password"]').forEach(input => {
+        input.className = "w-full pl-3 pr-10 py-3 border border-zinc-300 rounded-md focus:outline-none focus:border-zinc-950 font-bold text-xs transition";
+    });
+
+    function togglePasswordModal(show) {
+        const modal = document.getElementById('passwordModal');
+        modal.classList.toggle('hidden', !show);
+    }
+
+    function togglePasswordVisibility(btn) {
+        const input = btn.previousElementSibling;
+        const icon = btn.querySelector('i');
+        if (input.type === "password") {
+            input.type = "text";
+            icon.className = "ph ph-eye-closed text-lg";
+        } else {
+            input.type = "password";
+            icon.className = "ph ph-eye text-lg";
+        }
+    }
+
+    function selectLanguage(langCode) {
+        document.getElementById('languageInput').value = langCode;
+
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.remove('bg-zinc-950', 'text-white', 'hover:text-white');
+            btn.classList.add('bg-transparent', 'text-zinc-500', 'hover:text-zinc-950');
+        });
+
+        const activeBtn = document.getElementById('lang-' + langCode);
+        activeBtn.classList.remove('bg-transparent', 'text-zinc-500', 'hover:text-zinc-950');
+        activeBtn.classList.add('bg-zinc-950', 'text-white', 'hover:text-white');
+    }
+
+    async function submitPasswordForm() {
+        const form = document.getElementById('passwordForm');
+        const formData = new FormData(form);
+        const errorBox = document.getElementById('password-error');
+
+        try {
+            const response = await fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                const data = await response.json();
+                errorBox.innerText = data.error || "Please check your entries.";
+                errorBox.classList.remove('hidden');
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+</script>
+{% endblock %}

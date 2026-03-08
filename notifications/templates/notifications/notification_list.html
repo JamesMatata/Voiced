@@ -1,0 +1,155 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-10">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between border-b border-zinc-200 pb-8 gap-6">
+        <div class="max-w-xl">
+            <h1 class="text-3xl md:text-4xl font-black uppercase tracking-tighter">Your Alerts</h1>
+            <p class="text-zinc-500 font-medium mt-2 italic text-sm md:text-base">Stay updated on legislative shifts and community activity.</p>
+        </div>
+
+        <div id="header-actions" class="{% if not notifications %}hidden{% endif %} flex items-center">
+            <button onclick="markAllRead()"
+                    class="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-all border border-zinc-200 sm:border-none px-4 py-2 sm:p-0 rounded-md sm:rounded-none bg-zinc-50 sm:bg-transparent">
+                Mark All as Read
+            </button>
+        </div>
+    </div>
+
+    <div id="notification-container" class="space-y-4">
+        {% for n in notifications %}
+            <div id="notification-{{ n.id }}"
+                 class="notification-item group relative bg-white border {% if not n.is_read %}border-zinc-900 shadow-sm{% else %}border-zinc-200{% endif %} p-6 rounded-md transition-all cursor-pointer hover:bg-zinc-50/50"
+                 onclick="openNotificationModal({{ n.id }}, '{{ n.title|escapejs }}', '{{ n.message|escapejs }}', '{{ n.link|escapejs }}', '{{ n.get_notification_type_display }}', '{{ n.created_at|timesince }} ago')">
+
+                <div class="flex items-start gap-6">
+                    <div class="icon-box w-12 h-12 {% if not n.is_read %}bg-red-600 text-white{% else %}bg-zinc-100 text-zinc-400{% endif %} rounded-md flex items-center justify-center shrink-0 transition-colors">
+                        <i class="ph {% if n.notification_type == 'BILL' %}ph-file-text{% else %}ph-chats{% endif %} text-2xl"></i>
+                    </div>
+
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                            <span class="type-label text-[10px] font-black uppercase tracking-[0.2em] {% if not n.is_read %}text-red-600{% else %}text-zinc-400{% endif %} mb-1">
+                                {{ n.get_notification_type_display }}
+                            </span>
+                            <div class="flex items-center gap-4">
+                                <span class="text-[10px] font-bold text-zinc-400 uppercase">{{ n.created_at|timesince }} ago</span>
+                                <button onclick="event.stopPropagation(); deleteNotification({{ n.id }})" class="opacity-0 group-hover:opacity-100 transition text-zinc-400 hover:text-red-600">
+                                    <i class="ph ph-trash text-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-black uppercase tracking-tight text-zinc-900">{{ n.title }}</h3>
+                        <p class="text-sm text-zinc-500 mt-2 leading-relaxed line-clamp-2">{{ n.message }}</p>
+                    </div>
+                </div>
+                {% if not n.is_read %}
+                    <span class="unread-dot absolute top-4 right-4 w-2 h-2 bg-red-600 rounded-full"></span>
+                {% endif %}
+            </div>
+        {% empty %}
+            <div id="empty-state" class="py-24 border-2 border-dashed border-zinc-200 rounded-md flex flex-col items-center justify-center text-zinc-400">
+                <i class="ph ph-bell-slash text-7xl mb-4 opacity-10"></i>
+                <p class="font-black uppercase tracking-[0.2em] text-sm text-zinc-500">Silence is Golden</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div id="notifModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm" onclick="closeModal()"></div>
+    <div class="relative bg-white w-full max-w-lg rounded-md shadow-2xl overflow-hidden border border-zinc-200">
+        <div class="p-8 space-y-6">
+            <div class="flex justify-between items-start">
+                <span id="modalType" class="text-[10px] font-black uppercase tracking-[0.3em] text-red-600"></span>
+                <span id="modalTime" class="text-[10px] font-bold text-zinc-400 uppercase"></span>
+            </div>
+            <div>
+                <h2 id="modalTitle" class="text-2xl font-black uppercase tracking-tighter text-zinc-900 leading-tight"></h2>
+                <div class="w-12 h-1 bg-zinc-900 mt-4"></div>
+            </div>
+            <p id="modalMessage" class="text-zinc-600 text-sm leading-relaxed font-medium"></p>
+
+            <div class="pt-6 flex gap-4">
+                <a id="modalLink" href="#" class="flex-grow text-center bg-zinc-900 text-white text-[10px] font-black uppercase py-4 rounded hover:bg-black transition tracking-widest">Go to Page →</a>
+                <button onclick="closeModal()" class="px-6 border-2 border-zinc-200 text-zinc-400 text-[10px] font-black uppercase rounded hover:border-zinc-900 hover:text-zinc-900 transition tracking-widest">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const csrfToken = '{{ csrf_token }}';
+
+    async function openNotificationModal(id, title, message, link, type, time) {
+        document.getElementById('modalTitle').innerText = title;
+        document.getElementById('modalMessage').innerText = message;
+        document.getElementById('modalType').innerText = type;
+        document.getElementById('modalTime').innerText = time;
+
+        const linkBtn = document.getElementById('modalLink');
+        if (link && link !== 'None') {
+            linkBtn.href = link;
+            linkBtn.classList.remove('hidden');
+        } else {
+            linkBtn.classList.add('hidden');
+        }
+
+        document.getElementById('notifModal').classList.replace('hidden', 'flex');
+
+        // Mark as read in backend
+        const item = document.getElementById(`notification-${id}`);
+        if (item && !item.classList.contains('border-zinc-200')) {
+            markAsRead(id, item);
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('notifModal').classList.replace('flex', 'hidden');
+    }
+
+    async function markAsRead(id, element) {
+        try {
+            const response = await fetch(window.location.href, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ action: 'mark_read', id: id })
+            });
+            if (response.ok) {
+                element.classList.remove('border-zinc-900', 'shadow-sm');
+                element.classList.add('border-zinc-200');
+                element.querySelector('.unread-dot')?.remove();
+                element.querySelector('.icon-box').classList.replace('bg-red-600', 'bg-zinc-100');
+                element.querySelector('.icon-box').classList.replace('text-white', 'text-zinc-400');
+                element.querySelector('.type-label').classList.replace('text-red-600', 'text-zinc-400');
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function markAllRead() {
+        try {
+            const response = await fetch(window.location.href, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ action: 'mark_all_read' })
+            });
+            if (response.ok) location.reload();
+        } catch (e) { console.error(e); }
+    }
+
+    async function deleteNotification(id) {
+        const item = document.getElementById(`notification-${id}`);
+        try {
+            const response = await fetch(window.location.href, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ action: 'delete', id: id })
+            });
+            if (response.ok) {
+                item.remove();
+                if (document.querySelectorAll('.notification-item').length === 0) location.reload();
+            }
+        } catch (e) { console.error(e); }
+    }
+</script>
+{% endblock %}

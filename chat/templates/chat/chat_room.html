@@ -1,0 +1,395 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="fixed inset-0 flex flex-col h-[100dvh] bg-zinc-50 overflow-hidden z-[9999]">
+
+    <div id="alert-container" class="hidden fixed top-6 left-1/2 -translate-x-1/2 z-[99999] shadow-2xl rounded-md min-w-[320px] max-w-md border overflow-hidden animate-in slide-in-from-top-4 fade-in duration-300">
+        <div class="flex items-start justify-between p-4 gap-4">
+            <div class="flex items-start gap-3">
+                <i id="alert-icon" class="text-xl shrink-0 mt-0.5"></i>
+                <div class="flex flex-col">
+                    <span id="alert-title" class="text-[10px] font-black uppercase tracking-widest"></span>
+                    <span id="alert-message" class="text-xs font-medium mt-1 leading-relaxed"></span>
+                </div>
+            </div>
+            <button onclick="closeAlert()" class="shrink-0 opacity-50 hover:opacity-100 transition mt-0.5">
+                <i class="ph ph-x text-lg"></i>
+            </button>
+        </div>
+        <div id="alert-progress" class="h-1 w-full origin-left bg-black/10 transition-transform duration-[8000ms] ease-linear"></div>
+    </div>
+
+    <div class="bg-zinc-950 text-white border-b border-zinc-800 shrink-0 shadow-sm relative z-10 w-full">
+        <div class="max-w-7xl mx-auto w-full px-4 md:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-4 overflow-hidden">
+                <a href="{% url 'home' %}" class="hidden md:block text-2xl font-black tracking-tighter uppercase mr-4 border-r border-zinc-800 pr-8 hover:opacity-80 transition">
+                    VOICED<span class="text-red-600">.</span>
+                </a>
+
+                <div class="w-10 h-10 bg-zinc-900 rounded-md flex items-center justify-center border border-zinc-800 shrink-0">
+                    <i class="ph-fill ph-chats-circle text-xl text-zinc-400"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <h2 class="font-black text-xs md:text-sm uppercase tracking-widest truncate text-zinc-100">{{ bill.title }}</h2>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span id="status-pulse" class="w-1.5 h-1.5 rounded-full {% if is_closed %}bg-zinc-500{% else %}bg-green-500 animate-pulse{% endif %}"></span>
+                        <p class="text-[9px] md:text-[10px] text-zinc-400 font-black uppercase tracking-widest truncate">
+                            <span id="countdown-label">Live Alias: {{ user_alias }}</span>
+                            <span id="chat-countdown" class="ml-2 text-red-500 hidden"></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <a href="{% url 'bill_detail' bill.id %}" class="flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-widest bg-zinc-800 px-4 py-2.5 rounded-md hover:bg-zinc-700 transition border border-zinc-700 shrink-0">
+                <i class="ph ph-arrow-left text-sm md:text-base"></i>
+                <span class="hidden sm:inline">Back to Bill</span>
+            </a>
+        </div>
+    </div>
+
+    <div id="chat-log" class="flex-1 min-h-0 overflow-y-auto scroll-smooth custom-scrollbar w-full">
+        <div id="chat-messages-container" class="max-w-6xl mx-auto w-full p-4 md:p-8 space-y-6">
+            {% for msg in messages %}
+                <div class="flex w-full {% if msg.user.id == user_id %}justify-end{% else %}justify-start{% endif %} group" id="msg-{{ msg.id }}">
+                    <div class="max-w-[92%] md:max-w-[70%] lg:max-w-[60%]">
+                        <div class="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 px-1">
+                            {% if msg.user.id == user_id %}You{% else %}{{ msg.user.profile.chat_alias }}{% endif %}
+                        </div>
+                        <div class="relative p-3 md:p-4 rounded-md border {% if msg.user.id == user_id %}bg-zinc-900 border-zinc-900 text-white{% else %}bg-white border-zinc-200 text-zinc-900{% endif %} shadow-sm">
+                            {% if msg.parent_message %}
+                                <button onclick="scrollToMessage({{ msg.parent_message.id }})" class="block w-full text-left mb-3 focus:outline-none">
+                                    <div class="flex items-stretch gap-2">
+                                        <div class="w-1 bg-zinc-400/30 rounded-full my-0.5"></div>
+                                        <div class="overflow-hidden">
+                                            <p class="text-[9px] font-black uppercase tracking-widest {% if msg.user.id == user_id %}text-zinc-400{% else %}text-zinc-500{% endif %} mb-0.5">Replying</p>
+                                            <p class="text-xs italic line-clamp-1 opacity-70">{{ msg.parent_message.content }}</p>
+                                        </div>
+                                    </div>
+                                </button>
+                            {% endif %}
+                            <p class="text-sm md:text-base font-medium leading-relaxed break-words">{{ msg.content }}</p>
+                        </div>
+                        <div class="flex items-center gap-3 mt-2 px-1">
+                            <div class="flex items-center bg-transparent rounded-md border border-zinc-200 divide-x divide-zinc-200 {% if msg.user.id == user_id %}pointer-events-none opacity-40{% endif %}">
+                                <button onclick="sendReaction({{ msg.id }}, 'up')" id="btn-up-{{ msg.id }}" class="reaction-btn px-2.5 py-1 transition flex items-center gap-1.5 text-[10px] font-black bg-transparent hover:text-green-600 {% if msg.id in upvoted_ids %}reaction-up-active{% endif %}">
+                                    <i class="ph ph-arrow-fat-up"></i> <span id="up-{{ msg.id }}">{{ msg.upvotes }}</span>
+                                </button>
+                                <button onclick="sendReaction({{ msg.id }}, 'down')" id="btn-down-{{ msg.id }}" class="reaction-btn px-2.5 py-1 transition flex items-center gap-1.5 text-[10px] font-black bg-transparent hover:text-red-600 {% if msg.id in downvoted_ids %}reaction-down-active{% endif %}">
+                                    <i class="ph ph-arrow-fat-down"></i> <span id="down-{{ msg.id }}">{{ msg.downvotes }}</span>
+                                </button>
+                            </div>
+                            {% if msg.user.id != user_id %}
+                            <button onclick="prepareReply({{ msg.id }}, '{{ msg.content|escapejs }}')" class="text-[9px] font-black uppercase text-zinc-400 hover:text-zinc-950 transition">Reply</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="shrink-0 bg-zinc-50 border-t border-zinc-200 pb-safe w-full">
+        <div class="max-w-7xl mx-auto w-full relative">
+            <div id="lock-overlay" class="{% if not is_closed %}hidden{% endif %} absolute inset-0 z-50 bg-zinc-50/80 backdrop-blur-[2px] flex items-center justify-center">
+                <div class="flex items-center gap-3 px-6 py-3 bg-zinc-900 rounded-full text-white shadow-lg">
+                    <i class="ph-fill ph-lock-key text-red-500"></i>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Debate Closed: Read Only Mode</span>
+                </div>
+            </div>
+
+            <div id="reply-indicator" class="hidden bg-zinc-200 px-4 py-2 border-b border-zinc-300 mx-4 md:mx-8 mt-4 rounded-md">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <i class="ph ph-arrow-bend-up-left text-zinc-500 text-base"></i>
+                        <p id="reply-text" class="text-[11px] text-zinc-900 truncate italic font-medium"></p>
+                    </div>
+                    <button onclick="cancelReply()" class="p-1 hover:bg-zinc-300 rounded-md transition"><i class="ph ph-x font-bold"></i></button>
+                </div>
+            </div>
+
+            <div class="px-4 py-3 md:px-8 md:py-5 flex gap-2 w-full">
+                <input id="chat-message-input" type="text" placeholder="Share your perspective (Moderated by AI)..." autocomplete="off"
+                       class="flex-grow p-3 md:p-4 bg-white border border-zinc-200 rounded-md focus:outline-none focus:border-zinc-950 font-medium text-sm transition-colors shadow-sm disabled:opacity-50"
+                       {% if is_closed %}disabled{% endif %}>
+                <button id="chat-message-submit" class="bg-zinc-950 text-white px-5 md:px-8 rounded-md font-black uppercase tracking-widest text-[10px] hover:bg-black transition border border-zinc-950 flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
+                        {% if is_closed %}disabled{% endif %}>
+                    <i class="ph-fill ph-paper-plane-tilt text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        height: 100% !important;
+        width: 100% !important;
+        position: fixed;
+    }
+
+    nav, footer { display: none !important; }
+
+    .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 12px); }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 4px; }
+
+    .reaction-up-active { color: #15803d !important; }
+    .reaction-down-active { color: #dc2626 !important; }
+
+    .highlight-msg { animation: highlight-flat 1.5s ease-out; }
+    @keyframes highlight-flat { 0% { border-color: #000; } 100% { border-color: inherit; } }
+
+    .progress-shrink { transform: scaleX(0); }
+</style>
+
+<script>
+    const billId = "{{ bill.id }}";
+    const myUserId = {{ user_id }};
+    const csrfToken = "{{ csrf_token }}";
+    const closingDate = "{{ closing_date_iso }}";
+    let isClosed = {{ is_closed|yesno:"true,false" }};
+    let replyingToId = null;
+    let alertTimeout = null;
+
+    const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+    const chatSocket = new WebSocket(wsProtocol + window.location.host + '/ws/chat/' + billId + '/');
+
+    const chatLog = document.getElementById('chat-log');
+    const chatMessagesContainer = document.getElementById('chat-messages-container');
+    const messageInput = document.getElementById('chat-message-input');
+    const submitBtn = document.getElementById('chat-message-submit');
+    const replyIndicator = document.getElementById('reply-indicator');
+
+    chatLog.scrollTop = chatLog.scrollHeight;
+
+    function updateCountdown() {
+        if (isClosed || !closingDate) return;
+
+        const target = new Date(closingDate).getTime();
+        const now = new Date().getTime();
+        const diff = target - now;
+
+        if (diff <= 0) {
+            lockChat();
+            return;
+        }
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+        const countdownEl = document.getElementById('chat-countdown');
+
+        if (hours < 1) {
+            countdownEl.classList.remove('hidden');
+            countdownEl.innerText = `| Closes in: ${mins}m ${secs}s`;
+            if (mins < 5) countdownEl.classList.add('animate-pulse');
+        } else {
+            countdownEl.classList.add('hidden');
+        }
+    }
+
+    function lockChat() {
+        isClosed = true;
+        messageInput.disabled = true;
+        submitBtn.disabled = true;
+        document.getElementById('lock-overlay').classList.remove('hidden');
+        document.getElementById('status-pulse').classList.remove('bg-green-500', 'animate-pulse');
+        document.getElementById('status-pulse').classList.add('bg-zinc-500');
+        document.getElementById('chat-countdown').innerText = "| Debate Closed";
+        document.getElementById('chat-countdown').classList.remove('animate-pulse');
+        document.getElementById('chat-countdown').classList.remove('hidden');
+        showAlert('Participation Closed', 'The deadline has been reached. Chat is now in read-only mode.', 'error');
+    }
+
+    setInterval(updateCountdown, 1000);
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'chat_message') {
+            if (data.user_id !== myUserId) {
+                renderNewMessage(data);
+            }
+        } else if (data.type === 'message_reaction') {
+            if (data.reaction_type === 'self_vote_error') return;
+            const upEl = document.getElementById('up-' + data.message_id);
+            const downEl = document.getElementById('down-' + data.message_id);
+            if (upEl) upEl.innerText = data.upvotes;
+            if (downEl) downEl.innerText = data.downvotes;
+            if (data.user_id === myUserId) {
+                const upBtn = document.getElementById('btn-up-' + data.message_id);
+                const downBtn = document.getElementById('btn-down-' + data.message_id);
+                if (upBtn) {
+                    upBtn.classList.remove('reaction-up-active');
+                    downBtn.classList.remove('reaction-down-active');
+                    if (data.reaction_type === 'up') upBtn.classList.add('reaction-up-active');
+                    if (data.reaction_type === 'down') downBtn.classList.add('reaction-down-active');
+                }
+            }
+        }
+    };
+
+    function sendReaction(msgId, type) {
+        if (isClosed) return;
+        chatSocket.send(JSON.stringify({ 'type': 'reaction', 'message_id': msgId, 'reaction_type': type }));
+    }
+
+    function scrollToMessage(id) {
+        const el = document.getElementById('msg-' + id);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('highlight-msg');
+            setTimeout(() => el.classList.remove('highlight-msg'), 1500);
+        }
+    }
+
+    messageInput.addEventListener('input', function() {
+        messageInput.classList.remove('border-red-600', 'bg-red-50', 'text-red-900', 'placeholder-red-400', 'focus:border-red-600');
+        messageInput.classList.add('border-zinc-200', 'bg-white', 'focus:border-zinc-950');
+    });
+
+    submitBtn.onclick = async function() {
+        if (isClosed) return;
+        const content = messageInput.value.trim();
+        if (!content) return;
+
+        submitBtn.innerHTML = '<i class="ph ph-spinner animate-spin text-lg"></i>';
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch(window.location.href, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ message: content, parent_id: replyingToId })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (response.status === 403) {
+                    showAlert('Blocked', data.message || data.reason, 'error');
+                    if (data.message.includes('closed')) lockChat();
+                } else {
+                    showAlert('Error', data.message || 'Failed to send message', 'error');
+                }
+            } else {
+                renderNewMessage({
+                    message_id: data.msg_id,
+                    content: data.content,
+                    user_id: myUserId,
+                    sender_alias: data.user_alias,
+                    parent_id: replyingToId
+                });
+
+                chatSocket.send(JSON.stringify({
+                    'type': 'new_message',
+                    'content': content,
+                    'parent_id': replyingToId,
+                    'is_moderated': true
+                }));
+
+                messageInput.value = '';
+                cancelReply();
+            }
+        } catch (error) {
+            showAlert('Connection Error', 'Please check your network and try again.', 'error');
+        } finally {
+            if (!isClosed) {
+                submitBtn.innerHTML = '<i class="ph-fill ph-paper-plane-tilt text-lg"></i>';
+                submitBtn.disabled = false;
+                messageInput.focus();
+            }
+        }
+    };
+
+    messageInput.onkeyup = function(e) { if (e.keyCode === 13 && !isClosed) submitBtn.click(); };
+
+    function prepareReply(msgId, content) {
+        if (isClosed) return;
+        replyingToId = msgId;
+        document.getElementById('reply-text').innerText = `"${content}"`;
+        replyIndicator.classList.remove('hidden');
+        messageInput.focus();
+    }
+
+    function cancelReply() { replyingToId = null; replyIndicator.classList.add('hidden'); }
+
+    function showAlert(title, msg, type) {
+        const container = document.getElementById('alert-container');
+        const titleEl = document.getElementById('alert-title');
+        const msgEl = document.getElementById('alert-message');
+        const iconEl = document.getElementById('alert-icon');
+        const progressEl = document.getElementById('alert-progress');
+
+        clearTimeout(alertTimeout);
+        progressEl.classList.remove('progress-shrink');
+
+        titleEl.innerText = title;
+        msgEl.innerText = msg;
+
+        if (type === 'error') {
+            container.className = 'fixed top-6 left-1/2 -translate-x-1/2 z-[99999] shadow-2xl rounded-md min-w-[320px] max-w-md border overflow-hidden animate-in slide-in-from-top-4 fade-in duration-300 bg-red-50 border-red-200 text-red-900';
+            iconEl.className = 'ph-fill ph-warning-circle text-red-600 text-xl shrink-0 mt-0.5';
+        } else {
+            container.className = 'fixed top-6 left-1/2 -translate-x-1/2 z-[99999] shadow-2xl rounded-md min-w-[320px] max-w-md border overflow-hidden animate-in slide-in-from-top-4 fade-in duration-300 bg-green-50 border-green-200 text-green-900';
+            iconEl.className = 'ph-fill ph-check-circle text-green-600 text-xl shrink-0 mt-0.5';
+        }
+
+        container.classList.remove('hidden');
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                progressEl.classList.add('progress-shrink');
+            });
+        });
+
+        alertTimeout = setTimeout(() => {
+            closeAlert();
+        }, 8000);
+    }
+
+    function closeAlert() {
+        const container = document.getElementById('alert-container');
+        container.classList.add('hidden');
+    }
+
+    function renderNewMessage(data) {
+        const isMine = (data.user_id === myUserId);
+        if (document.getElementById(`msg-${data.message_id}`)) return;
+
+        const alignmentClass = isMine ? "justify-end" : "justify-start";
+        const bubbleStyle = isMine ? "bg-zinc-900 border-zinc-900 text-white" : "bg-white border-zinc-200 text-zinc-900";
+        const aliasDisplay = isMine ? "You" : data.sender_alias;
+
+        let parentHtml = data.parent_id ? `
+            <button onclick="scrollToMessage(${data.parent_id})" class="block w-full text-left mb-3 focus:outline-none">
+                <div class="flex items-stretch gap-2">
+                    <div class="w-1 bg-zinc-400/30 rounded-full my-0.5"></div>
+                    <div class="overflow-hidden">
+                        <p class="text-[9px] font-black uppercase tracking-widest ${isMine ? 'text-zinc-400' : 'text-zinc-500'} mb-0.5">Replying</p>
+                        <p class="text-xs italic line-clamp-1 opacity-70">...</p>
+                    </div>
+                </div>
+            </button>` : '';
+
+        let reactionRow = `<div class="flex items-center bg-transparent rounded-md border border-zinc-200 divide-x divide-zinc-200 ${isMine || isClosed ? 'pointer-events-none opacity-40' : ''}"><button onclick="sendReaction(${data.message_id}, 'up')" id="btn-up-${data.message_id}" class="reaction-btn px-2.5 py-1 transition flex items-center gap-1.5 text-[10px] font-black bg-transparent hover:text-green-600"><i class="ph ph-arrow-fat-up"></i> <span id="up-${data.message_id}">0</span></button><button onclick="sendReaction(${data.message_id}, 'down')" id="btn-down-${data.message_id}" class="reaction-btn px-2.5 py-1 transition flex items-center gap-1.5 text-[10px] font-black bg-transparent hover:text-red-600"><i class="ph ph-arrow-fat-down"></i> <span id="down-${data.message_id}">0</span></button></div>`;
+
+        if (!isMine && !isClosed) {
+            reactionRow += `<button onclick="prepareReply(${data.message_id}, '${data.content.replace(/'/g, "\\'")}')" class="text-[9px] font-black uppercase text-zinc-400 hover:text-zinc-950 transition">Reply</button>`;
+        }
+
+        const html = `<div class="flex w-full ${alignmentClass} group" id="msg-${data.message_id}"><div class="max-w-[92%] md:max-w-[70%] lg:max-w-[60%]"><div class="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 px-1">${aliasDisplay}</div><div class="relative p-3 md:p-4 rounded-md border shadow-sm ${bubbleStyle}">${parentHtml}<p class="text-sm md:text-base font-medium leading-relaxed break-words">${data.content}</p></div><div class="flex items-center gap-3 mt-2 px-1">${reactionRow}</div></div></div>`;
+
+        chatMessagesContainer.insertAdjacentHTML('beforeend', html);
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="max-w-md mx-auto py-12 px-4">
+    <div class="space-y-8">
+
+        <div class="text-center">
+            <h1 class="text-4xl font-black uppercase tracking-tighter text-zinc-900">Join Voiced</h1>
+            <p class="text-zinc-500 font-medium text-sm mt-2">Create an account to join the debate.</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="p-4 rounded-md text-[10px] font-black uppercase tracking-widest border {% if message.tags == 'success' %}bg-green-50 text-green-700 border-green-200{% else %}bg-red-50 text-red-700 border-red-200{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" class="space-y-5">
+            {% csrf_token %}
+
+            <div class="space-y-1">
+                <label class="block text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Email Address</label>
+                <input type="email" name="email" value="{{ email_value }}" required
+                       class="w-full p-4 bg-white border border-zinc-300 rounded-md focus:outline-none focus:border-zinc-950 font-bold text-sm transition-all">
+            </div>
+
+            {% for field in form %}
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">{{ field.label }}</label>
+                    <div class="relative group">
+                        {{ field }}
+                        {% if "password" in field.id_for_label %}
+                        <button type="button" onclick="togglePassword(this)"
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-950 transition-colors focus:outline-none bg-transparent border-none p-0 outline-none">
+                            <i class="ph ph-eye text-xl"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% if field.errors %}
+                        <p class="text-[9px] text-red-600 font-black uppercase mt-1 ml-1">{{ field.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="w-full bg-zinc-950 text-white font-black py-4 rounded-md hover:bg-black transition border border-zinc-950 uppercase tracking-[0.2em] text-xs mt-4">
+                Create Account
+            </button>
+        </form>
+
+        <div class="pt-6 border-t border-zinc-200 text-center">
+            <p class="text-xs font-medium text-zinc-500">
+                Already part of the conversation?
+                <a href="{% url 'login' %}" class="text-zinc-950 font-black uppercase tracking-widest hover:text-red-600 transition ml-1">Log in</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .helptext { display: none; }
+    /* Global safety to prevent any outline on toggle buttons */
+    button:focus { outline: none !important; box-shadow: none !important; }
+</style>
+
+<script>
+    document.querySelectorAll('input').forEach(input => {
+        if(input.type !== 'hidden' && input.type !== 'checkbox') {
+            input.className = "w-full p-4 bg-white border border-zinc-300 rounded-md focus:outline-none focus:border-zinc-950 font-bold text-sm transition-all";
+        }
+    });
+
+    function togglePassword(btn) {
+        const input = btn.previousElementSibling;
+        const icon = btn.querySelector('i');
+        if (input.type === "password") {
+            input.type = "text";
+            icon.className = "ph ph-eye-closed text-xl";
+        } else {
+            input.type = "password";
+            icon.className = "ph ph-eye text-xl";
+        }
+    }
+</script>
+{% endblock %}

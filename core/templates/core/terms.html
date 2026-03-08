@@ -1,0 +1,40 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-16">
+    <div class="text-center mb-16">
+        <h1 class="text-4xl font-black uppercase tracking-tighter text-zinc-900 mb-2">Terms of Service</h1>
+        <p class="text-zinc-400 font-bold uppercase text-[10px] tracking-[0.3em]">The Rules of Engagement</p>
+    </div>
+
+    <div class="space-y-4">
+        <div class="border border-zinc-200 p-6 rounded-md bg-white hover:border-zinc-950 transition-all flex gap-6 items-start">
+            <i class="ph ph-hand-eye text-2xl text-zinc-950"></i>
+            <div>
+                <h3 class="font-black uppercase tracking-widest text-sm mb-1">Authenticity</h3>
+                <p class="text-sm text-zinc-500 font-medium">One human, one account. Any attempt to manipulate votes using bots or multiple accounts will result in a permanent ban.</p>
+            </div>
+        </div>
+
+        <div class="border border-zinc-200 p-6 rounded-md bg-white hover:border-zinc-950 transition-all flex gap-6 items-start">
+            <i class="ph ph-megaphone text-2xl text-zinc-950"></i>
+            <div>
+                <h3 class="font-black uppercase tracking-widest text-sm mb-1">Perspective Content</h3>
+                <p class="text-sm text-zinc-500 font-medium">You are responsible for what you say. We do not tolerate hate speech, ethnic incitement, or targeted harassment.</p>
+            </div>
+        </div>
+
+        <div class="border border-zinc-900 p-6 rounded-md bg-zinc-950 text-white flex gap-6 items-start">
+            <i class="ph ph-gavel text-2xl text-red-600"></i>
+            <div>
+                <h3 class="font-black uppercase tracking-widest text-sm mb-1">Finality</h3>
+                <p class="text-sm text-zinc-400 font-medium">We reserve the right to remove content that violates Kenyan law or our community standards to keep the platform safe for everyone.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-12 text-center">
+        <p class="text-[10px] font-black uppercase tracking-widest text-zinc-300">By using the platform, you acknowledge these terms.</p>
+    </div>
+</div>
+{% endblock %}

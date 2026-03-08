@@ -1,0 +1,40 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-16">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-24">
+        <div>
+            <h1 class="text-6xl md:text-8xl font-black uppercase tracking-tighter text-zinc-900 leading-[0.85] mb-6">
+                Civic <br><span class="text-red-600">Voice.</span>
+            </h1>
+            <p class="text-xl text-zinc-600 font-bold leading-tight border-l-4 border-zinc-900 pl-6">
+                Kenya’s legislative landscape is complex. We make it accessible. One bill at a time.
+            </p>
+        </div>
+        <div class="bg-zinc-100 border border-zinc-200 p-8 rounded-md relative">
+            <div class="absolute -top-3 -right-3 bg-zinc-950 text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-md">Alpha v1.0</div>
+            <p class="text-zinc-500 font-medium text-sm leading-relaxed">
+                By leveraging Artificial Intelligence, we translate parliamentary jargon into clear, actionable insights in English and Swahili, ensuring every citizen can participate in the debate that shapes our future.
+            </p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-0 border border-zinc-900 rounded-md overflow-hidden mb-24">
+        <div class="p-8 border-b md:border-b-0 md:border-r border-zinc-900 bg-white hover:bg-zinc-50 transition">
+            <i class="ph ph-lightning-fill text-3xl mb-4"></i>
+            <h3 class="font-black uppercase tracking-widest text-sm mb-2">Instant Analysis</h3>
+            <p class="text-xs text-zinc-500 font-medium leading-relaxed text-balance">AI scans 100+ page documents to give you a 2-minute summary of what matters.</p>
+        </div>
+        <div class="p-8 border-b md:border-b-0 md:border-r border-zinc-900 bg-white hover:bg-zinc-50 transition">
+            <i class="ph ph-shield-check-fill text-3xl mb-4"></i>
+            <h3 class="font-black uppercase tracking-widest text-sm mb-2">Verified Identity</h3>
+            <p class="text-xs text-zinc-500 font-medium leading-relaxed text-balance">Debate safely behind an anonymous alias. Your security is our policy.</p>
+        </div>
+        <div class="p-8 bg-zinc-900 text-white group">
+            <i class="ph ph-users-fill text-3xl mb-4 text-red-600"></i>
+            <h3 class="font-black uppercase tracking-widest text-sm mb-2">Mass Impact</h3>
+            <p class="text-xs text-zinc-400 font-medium leading-relaxed text-balance group-hover:text-white transition">Aggregated data that shows Parliament what the people actually think.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
