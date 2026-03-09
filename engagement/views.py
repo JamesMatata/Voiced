@@ -7,7 +7,6 @@ from bills.models import Bill, BillVote
 from chat.models import ChatMessage
 from chat.moderation import check_message_toxicity
 
-
 @csrf_exempt
 def ussd_callback(request):
     phone_number = request.POST.get("phoneNumber")
@@ -86,7 +85,7 @@ def ussd_callback(request):
             'reason': "CON Niaje umechagua hivo? (Chapa reason au 0)",
             'done': "END Sauti yako imefika!",
             'rejected': "END Zimeshtuliwa: hio ni kuchochea fujo.",
-            'sms_status': "CON SMS Alerts: {status}\n1. Washa\n2. Zima\n3. Lugha\n0. Back",
+            'sms_status': "CON SMS Alerts: {status}\n1. Washa\n2. Zima\n3. Lugha\n0. Nyuma",
             'lang_menu': "CON Chagua Lugha:\n1. English\n2. Swahili\n3. Sheng",
             'lang_done': "END Lugha imetiki!",
             'sms_on': "END SMS ziko rada!",
@@ -126,8 +125,7 @@ def ussd_callback(request):
 
                     full_text = "No summary available."
                     if isinstance(lang_data, dict):
-                        full_text = lang_data.get('short_summary') or lang_data.get('long_description',
-                                                                                    "Summary in progress.")
+                        full_text = lang_data.get('short_summary') or lang_data.get('long_description', "Summary in progress.")
 
                     chunk_size = 120
                     chunks = [full_text[i:i + chunk_size] for i in range(0, len(full_text), chunk_size)]

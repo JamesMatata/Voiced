@@ -1,11 +1,8 @@
-import random
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 from .models import Bill
 from notifications.utils import send_live_notification
-from engagement.utils import send_at_sms
-
 
 @receiver(post_save, sender=Bill)
 def bill_processed_notification(sender, instance, created, **kwargs):
@@ -17,8 +14,6 @@ def bill_processed_notification(sender, instance, created, **kwargs):
 
         for user in users:
             profile = user.profile
-            user_lang = profile.language or 'en'
-
             if profile.email_notifications:
                 send_live_notification(
                     user=user,
@@ -27,35 +22,3 @@ def bill_processed_notification(sender, instance, created, **kwargs):
                     link=f"/bills/{instance.id}/",
                     n_type='BILL'
                 )
-
-            if profile.sms_notifications and profile.phone_number:
-                lang_data = instance.ai_analysis.get(user_lang) or instance.ai_analysis.get('en')
-
-                summary = ""
-                if isinstance(lang_data, dict):
-                    summary = lang_data.get('short_summary', "")
-                elif isinstance(lang_data, str):
-                    summary = lang_data
-
-                if not summary:
-                    hooks = [
-                        "The mtaa is talking about this! Be the first to read and vote.",
-                        "Big moves in Parliament. Check it out and give your take.",
-                        "Your voice matters on this. Dial in to see what's changing.",
-                        "New legislation alert. Join the debate now."
-                    ]
-                    summary = random.choice(hooks)
-
-                prefix = {
-                    'en': "VOICED ALERT",
-                    'sw': "ILANI YA VOICED",
-                    'sh': "RADA YA VOICED"
-                }.get(user_lang, "VOICED")
-
-                sms_text = (
-                    f"{prefix}: {instance.title[:40]}..\n"
-                    f"{summary[:110]}..\n"
-                    f"Dial *483*XYZ# ID: {instance.short_id}"
-                )
-
-                send_at_sms(profile.phone_number, sms_text)
