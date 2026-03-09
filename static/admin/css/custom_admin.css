@@ -1,0 +1,47 @@
+:root {
+    --primary: #dc2626 !important;
+    --secondary: #991b1b !important;
+    --accent: #ef4444 !important;
+    --primary-fg: #ffffff !important;
+
+    --header-bg: #18181b !important; /* Matches your Zinc 950 UI */
+    --header-color: #ffffff !important;
+    --header-link-color: #fca5a5 !important;
+
+    --breadcrumbs-bg: #27272a !important;
+    --breadcrumbs-fg: #f4f4f5 !important;
+    --breadcrumbs-link-fg: #fca5a5 !important;
+
+    --link-fg: #dc2626 !important;
+    --link-hover-color: #991b1b !important;
+    --link-selected-fg: #b91c1c !important;
+
+    --button-bg: #dc2626 !important;
+    --button-hover-bg: #991b1b !important;
+    --default-button-bg: #18181b !important;
+}
+
+#header {
+    background: var(--header-bg) !important;
+    color: var(--header-color) !important;
+    border-bottom: 3px solid var(--primary) !important;
+}
+
+#nav-sidebar .module th.item-selected {
+    border-left: 5px solid var(--primary) !important;
+}
+
+.module h2, .panel h2, .content-main h2 {
+    background: var(--primary) !important;
+    color: #ffffff !important;
+}
+
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+    background: var(--primary) !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.button.default, input[type=submit].default {
+    background: var(--primary) !important;
+}

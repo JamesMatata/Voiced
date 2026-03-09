@@ -6,7 +6,6 @@ def send_at_sms(phone_number, message):
     """
     Sends an SMS via Africa's Talking gateway.
     """
-    # Initialize the SDK with sandbox or production credentials
     username = settings.AT_USERNAME
     api_key = settings.AT_API_KEY
 
@@ -14,7 +13,6 @@ def send_at_sms(phone_number, message):
     sms = africastalking.SMS
 
     try:
-        # recipients must be a list
         response = sms.send(message, [phone_number])
         return response
     except Exception as e:

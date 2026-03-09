@@ -286,14 +286,18 @@
                     content: data.content,
                     user_id: myUserId,
                     sender_alias: data.user_alias,
-                    parent_id: replyingToId
+                    parent_id: replyingToId,
+                    parent_content: data.parent_content
                 });
 
                 chatSocket.send(JSON.stringify({
                     'type': 'new_message',
+                    'message_id': data.msg_id,
                     'content': content,
+                    'sender_alias': data.user_alias,
+                    'user_id': myUserId,
                     'parent_id': replyingToId,
-                    'is_moderated': true
+                    'parent_content': data.parent_content
                 }));
 
                 messageInput.value = '';
@@ -375,7 +379,7 @@
                     <div class="w-1 bg-zinc-400/30 rounded-full my-0.5"></div>
                     <div class="overflow-hidden">
                         <p class="text-[9px] font-black uppercase tracking-widest ${isMine ? 'text-zinc-400' : 'text-zinc-500'} mb-0.5">Replying</p>
-                        <p class="text-xs italic line-clamp-1 opacity-70">...</p>
+                        <p class="text-xs italic line-clamp-1 opacity-70">${data.parent_content || '...'}</p>
                     </div>
                 </div>
             </button>` : '';

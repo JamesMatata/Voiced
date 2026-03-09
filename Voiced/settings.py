@@ -28,10 +28,10 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'fallback-secret-key-for-dev')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', '9e27-105-164-79-194.ngrok-free.app']
+ALLOWED_HOSTS = ['*', 'cf84-41-89-22-3.ngrok-free.app']
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://9e27-105-164-79-194.ngrok-free.app", 'http://127.0.0.1:8000',
+    "https://cf84-41-89-22-3.ngrok-free.app", 'http://127.0.0.1:8000',
 ]
 
 
@@ -145,6 +145,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 # Celery & Redis Setup
 CELERY_BROKER_URL = 'redis://localhost:6379/0'

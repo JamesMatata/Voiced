@@ -1,5 +1,4 @@
 from django.db.models import Count, Max, Q
-from django.template.loader import render_to_string
 from django.views.generic import ListView, DetailView, TemplateView
 from django.utils import timezone
 from django.http import JsonResponse, FileResponse, HttpResponse

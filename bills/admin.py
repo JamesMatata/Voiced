@@ -1,66 +1,59 @@
 from django.contrib import admin
-from django.contrib import messages
-from .models import Bill, ScrapeLog
-from .tasks import process_bill_with_ai, run_all_scrapers
+from .models import Bill, ScrapeLog, BillVote
 
 
 @admin.register(Bill)
 class BillAdmin(admin.ModelAdmin):
-    list_display = ('title', 'status', 'is_processed_by_ai', 'support_count', 'oppose_count', 'created_at')
-    list_filter = ('status', 'is_processed_by_ai', 'created_at')
-    search_fields = ('title',)
-    readonly_fields = ('id', 'created_at', 'updated_at', 'document_hash')
-
-    # Custom Admin Action to trigger Gemini from the dashboard
-    actions = ['trigger_ai_analysis']
-
-    @admin.action(description='Generate AI Analysis for selected bills')
-    def trigger_ai_analysis(self, request, queryset):
-        count = 0
-        for bill in queryset:
-            if not bill.is_processed_by_ai:
-                process_bill_with_ai.delay(bill.id)
-                count += 1
-
-        self.message_user(
-            request,
-            f"Successfully queued {count} bill(s) for AI processing.",
-            messages.SUCCESS
-        )
+    list_display = ('short_id', 'title_short', 'status', 'closing_date', 'is_processed_by_ai', 'support_count',
+                    'oppose_count')
+    list_filter = ('status', 'is_processed_by_ai', 'notification_sent', 'created_at')
+    search_fields = ('title', 'short_id')
+    readonly_fields = ('short_id', 'view_count', 'support_count', 'oppose_count', 'document_hash')
 
     fieldsets = (
-        ('Source Information', {
-            'fields': ('id', 'title', 'source_url', 'document_hash')
+        ('Basic Information', {
+            'fields': ('short_id', 'title', 'source_url', 'status', 'closing_date')
         }),
-        ('AI Summaries (JSON)', {
-            'fields': ('ai_analysis', 'is_processed_by_ai'),
-            'classes': ('wide',)
+        ('AI Analysis Details', {
+            'fields': ('is_processed_by_ai', 'ai_analysis', 'notification_sent', 'document_hash'),
+            'classes': ('collapse',),
         }),
-        ('Status & Metrics', {
-            'fields': ('status', 'support_count', 'oppose_count')
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
+        ('Engagement Stats', {
+            'fields': ('view_count', 'support_count', 'oppose_count'),
         }),
     )
+
+    def title_short(self, obj):
+        return obj.title[:50] + "..." if len(obj.title) > 50 else obj.title
+
+    title_short.short_description = 'Title'
+
+    class Media:
+        css = {
+            'all': ('admin/css/custom_admin.css',)
+        }
 
 
 @admin.register(ScrapeLog)
 class ScrapeLogAdmin(admin.ModelAdmin):
-    list_display = ('source_name', 'was_successful', 'bills_found', 'bills_added', 'created_at')
+    list_display = ('source_name', 'bills_found', 'bills_added', 'was_successful', 'created_at')
     list_filter = ('was_successful', 'source_name')
-    readonly_fields = ('created_at', 'updated_at', 'source_name', 'bills_found', 'bills_added', 'was_successful',
-                       'error_message')
+    readonly_fields = ('created_at', 'updated_at')
 
-    # Custom action to trigger the scraper manually
-    actions = ['trigger_manual_scrape']
+    class Media:
+        css = {
+            'all': ('admin/css/custom_admin.css',)
+        }
 
-    @admin.action(description='Run Scraper Pipeline Now')
-    def trigger_manual_scrape(self, request, queryset):
-        run_all_scrapers.delay()
-        self.message_user(
-            request,
-            "The web scraper has been queued and is running in the background.",
-            messages.SUCCESS
-        )
+
+@admin.register(BillVote)
+class BillVoteAdmin(admin.ModelAdmin):
+    list_display = ('bill', 'user', 'vote_type', 'created_at')
+    list_filter = ('vote_type', 'created_at')
+    search_fields = ('bill__title', 'user__username', 'reason')
+    readonly_fields = ('created_at',)
+
+    class Media:
+        css = {
+            'all': ('admin/css/custom_admin.css',)
+        }

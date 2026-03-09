@@ -5,7 +5,7 @@ from django.views.generic import DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from bills.models import Bill
 from accounts.models import UserProfile
-from chat.models import MessageReaction
+from chat.models import ChatMessage, MessageReaction
 
 from .moderation import check_message_toxicity
 
@@ -69,10 +69,14 @@ class BillChatView(LoginRequiredMixin, DetailView):
             parent_message_id=parent_id
         )
 
+        parent_content = ""
+        if msg.parent_message:
+            parent_content = msg.parent_message.content
+
         return JsonResponse({
             'status': 'success',
             'msg_id': msg.id,
             'content': msg.content,
-            'user_alias': request.user.profile.chat_alias
+            'user_alias': request.user.profile.chat_alias,
+            'parent_content': parent_content
         })
-

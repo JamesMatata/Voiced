@@ -1,5 +1,4 @@
 import random
-
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import User
@@ -10,7 +9,10 @@ from engagement.utils import send_at_sms
 
 @receiver(post_save, sender=Bill)
 def bill_processed_notification(sender, instance, created, **kwargs):
-    if instance.is_processed_by_ai and instance.status == Bill.Status.ACTIVE:
+    if instance.is_processed_by_ai and instance.status == Bill.Status.ACTIVE and not instance.notification_sent:
+
+        Bill.objects.filter(id=instance.id).update(notification_sent=True)
+
         users = User.objects.filter(profile__isnull=False)
 
         for user in users:
@@ -27,14 +29,20 @@ def bill_processed_notification(sender, instance, created, **kwargs):
                 )
 
             if profile.sms_notifications and profile.phone_number:
-                summary = instance.ai_analysis.get(user_lang) or instance.ai_analysis.get('en')
+                lang_data = instance.ai_analysis.get(user_lang) or instance.ai_analysis.get('en')
+
+                summary = ""
+                if isinstance(lang_data, dict):
+                    summary = lang_data.get('short_summary', "")
+                elif isinstance(lang_data, str):
+                    summary = lang_data
 
                 if not summary:
                     hooks = [
-                        f"The mtaa is talking about this! Be the first to read and vote.",
-                        f"Big moves in Parliament. Check it out and give your take.",
-                        f"Your voice matters on this. Dial in to see what's changing.",
-                        f"New legislation alert. Join the debate now."
+                        "The mtaa is talking about this! Be the first to read and vote.",
+                        "Big moves in Parliament. Check it out and give your take.",
+                        "Your voice matters on this. Dial in to see what's changing.",
+                        "New legislation alert. Join the debate now."
                     ]
                     summary = random.choice(hooks)
 

@@ -32,12 +32,18 @@ class Bill(TimeStampedModel):
     is_processed_by_ai = models.BooleanField(default=False)
     closing_date = models.DateField(null=True, blank=True)
 
+    notification_sent = models.BooleanField(default=False, db_index=True)
+
     status = models.CharField(max_length=2, choices=Status.choices, default=Status.DRAFT)
     view_count = models.PositiveIntegerField(default=0)
     support_count = models.PositiveIntegerField(default=0)
     oppose_count = models.PositiveIntegerField(default=0)
 
     objects = BillManager()
+
+    class Meta:
+        verbose_name = "Bill"
+        verbose_name_plural = "Bills"
 
     def save(self, *args, **kwargs):
         if not self.short_id:
@@ -61,6 +67,10 @@ class ScrapeLog(TimeStampedModel):
     was_successful = models.BooleanField(default=True)
     error_message = models.TextField(blank=True, null=True)
 
+    class Meta:
+        verbose_name = "Scrape Log"
+        verbose_name_plural = "Scrape Logs"
+
     def __str__(self):
         return f"{self.source_name} - {self.created_at.strftime('%Y-%m-%d')}"
 
@@ -78,6 +88,8 @@ class BillVote(models.Model):
 
     class Meta:
         unique_together = ('bill', 'user')
+        verbose_name = "Bill Vote"
+        verbose_name_plural = "Bill Votes"
 
     def save(self, *args, **kwargs):
         is_new = self._state.adding

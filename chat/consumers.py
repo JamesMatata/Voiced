@@ -1,9 +1,8 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import ChatMessage, MessageReaction
-from bills.models import Bill
-from django.contrib.auth.models import User
+from django.db import transaction
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -28,15 +27,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
         user = self.scope['user']
 
         if action_type == 'new_message':
+            msg_id = data.get('message_id')
+            if not msg_id:
+                return
+
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
                     'type': 'chat_message',
-                    'message_id': data.get('message_id'),
+                    'message_id': msg_id,
                     'content': data.get('content'),
                     'sender_alias': data.get('sender_alias'),
                     'user_id': user.id,
-                    'parent_id': data.get('parent_id')
+                    'parent_id': data.get('parent_id'),
+                    'parent_content': data.get('parent_content')
                 }
             )
 
@@ -44,19 +48,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
             msg_id = data.get('message_id')
             r_type = data.get('reaction_type')
 
+            if not msg_id or msg_id == "null":
+                return
+
             up, down, final = await self.handle_reaction(msg_id, r_type, user)
 
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    'type': 'message_reaction',
-                    'message_id': msg_id,
-                    'upvotes': up,
-                    'downvotes': down,
-                    'reaction_type': final,
-                    'user_id': user.id
-                }
-            )
+            if up is not None:
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'message_reaction',
+                        'message_id': msg_id,
+                        'upvotes': up,
+                        'downvotes': down,
+                        'reaction_type': final,
+                        'user_id': user.id
+                    }
+                )
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps(event))
@@ -67,32 +75,36 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def handle_reaction(self, message_id, reaction_type, user):
         from chat.models import ChatMessage, MessageReaction
-        from django.db import transaction
 
-        with transaction.atomic():
-            message = ChatMessage.objects.select_for_update().get(id=message_id)
+        try:
+            with transaction.atomic():
+                message = ChatMessage.objects.select_for_update().get(id=message_id)
 
-            if message.user == user:
-                return message.upvotes, message.downvotes, 'self_vote_error'
+                if message.user == user:
+                    return message.upvotes, message.downvotes, 'self_vote_error'
 
-            existing = MessageReaction.objects.filter(message=message, user=user).first()
-            final_type = reaction_type
+                existing = MessageReaction.objects.filter(message=message, user=user).first()
+                final_type = reaction_type
 
-            if existing:
-                if existing.reaction_type == reaction_type:
-                    existing.delete()
-                    final_type = 'none'
+                if existing:
+                    if existing.reaction_type == reaction_type:
+                        existing.delete()
+                        final_type = 'none'
+                    else:
+                        existing.reaction_type = reaction_type
+                        existing.save()
                 else:
-                    existing.reaction_type = reaction_type
-                    existing.save()
-            else:
-                MessageReaction.objects.create(message=message, user=user, reaction_type=reaction_type)
+                    MessageReaction.objects.create(message=message, user=user, reaction_type=reaction_type)
 
-            upvotes = MessageReaction.objects.filter(message=message, reaction_type='up').count()
-            downvotes = MessageReaction.objects.filter(message=message, reaction_type='down').count()
+                upvotes = MessageReaction.objects.filter(message=message, reaction_type='up').count()
+                downvotes = MessageReaction.objects.filter(message=message, reaction_type='down').count()
 
-            message.upvotes = upvotes
-            message.downvotes = downvotes
-            message.save()
+                message.upvotes = upvotes
+                message.downvotes = downvotes
+                message.save()
 
-        return upvotes, downvotes, final_type
+                return upvotes, downvotes, final_type
+        except ObjectDoesNotExist:
+            return None, None, 'error'
+        except Exception:
+            return None, None, 'error'
