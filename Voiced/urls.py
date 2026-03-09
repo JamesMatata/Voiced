@@ -8,4 +8,5 @@ urlpatterns = [
     path('auth/', include('accounts.urls')),
     path('', include('chat.urls')),
     path('notifications/', include('notifications.urls')),
+    path('engagement/', include('engagement.urls')),
 ]

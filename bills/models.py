@@ -23,6 +23,7 @@ class Bill(TimeStampedModel):
         CLOSED = 'CL', _('Closed')
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    short_id = models.PositiveIntegerField(unique=True, db_index=True, blank=True)
     title = models.CharField(max_length=500, db_index=True)
     source_url = models.URLField(unique=True)
     document_hash = models.CharField(max_length=64, blank=True)
@@ -38,8 +39,14 @@ class Bill(TimeStampedModel):
 
     objects = BillManager()
 
+    def save(self, *args, **kwargs):
+        if not self.short_id:
+            last_bill = Bill.objects.all().order_by('short_id').last()
+            self.short_id = (last_bill.short_id + 1) if last_bill else 100
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return self.title
+        return f"{self.short_id} - {self.title}"
 
     @property
     def current_status(self):
