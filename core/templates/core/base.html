@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Voiced | The Nation is Talking{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -43,7 +44,11 @@
 
                 <div class="flex items-center gap-8">
                     <a href="{% url 'home' %}" class="flex items-center gap-2">
-                        <span class="text-2xl font-black tracking-tighter">VOICED<span class="text-red-600">.</span></span>
+                        <img src="{% static 'images/voiced.png' %}"
+                             alt="VOICED Logo"
+                             class="h-6"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <span class="text-2xl font-black tracking-tighter hidden">VOICED<span class="text-red-600">.</span></span>
                     </a>
                     <div class="hidden md:flex space-x-6 items-center">
                         <a href="{% url 'bill_list' %}" class="font-bold text-slate-600 hover:text-black transition">Bills</a>
@@ -158,9 +163,13 @@
     <footer class="bg-zinc-950 text-white mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-center md:text-left">
-
                 <div class="col-span-1 md:col-span-1">
-                    <span class="text-3xl font-black tracking-tighter block mb-4">VOICED<span class="text-red-600">.</span></span>
+                    <img src="{% static 'images/voiced_white.png' %}"
+                     alt="VOICED Logo"
+                     class="h-10 mb-4"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+
+                    <span class="text-3xl font-black tracking-tighter block mb-4 hidden">VOICED<span class="text-red-600">.</span></span>
                     <p class="text-sm text-zinc-400 font-normal md:pr-4 leading-relaxed">Translating complex government legislation into Sheng, Swahili, and English so every citizen can be heard.</p>
                 </div>
 
