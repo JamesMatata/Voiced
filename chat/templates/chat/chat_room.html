@@ -3,7 +3,7 @@
 {% block content %}
 <div class="fixed inset-0 flex flex-col h-[100dvh] bg-zinc-50 overflow-hidden z-[9999]">
 
-    <div id="alert-container" class="hidden fixed top-6 left-1/2 -translate-x-1/2 z-[99999] shadow-2xl rounded-md min-w-[320px] max-w-md border overflow-hidden animate-in slide-in-from-top-4 fade-in duration-300">
+    <div id="alert-container" class="hidden fixed top-6 left-1/2 -translate-x-1/2 z-[100000] shadow-2xl rounded-md min-w-[320px] max-w-md border overflow-hidden animate-in slide-in-from-top-4 fade-in duration-300">
         <div class="flex items-start justify-between p-4 gap-4">
             <div class="flex items-start gap-3">
                 <i id="alert-icon" class="text-xl shrink-0 mt-0.5"></i>
@@ -144,7 +144,7 @@
     .highlight-msg { animation: highlight-flat 1.5s ease-out; }
     @keyframes highlight-flat { 0% { border-color: #000; } 100% { border-color: inherit; } }
 
-    .progress-shrink { transform: scaleX(0); }
+    .progress-shrink { transform: scaleX(0) !important; }
 </style>
 
 <script>
@@ -340,10 +340,10 @@
         msgEl.innerText = msg;
 
         if (type === 'error') {
-            container.className = 'fixed top-6 left-1/2 -translate-x-1/2 z-[99999] shadow-2xl rounded-md min-w-[320px] max-w-md border overflow-hidden animate-in slide-in-from-top-4 fade-in duration-300 bg-red-50 border-red-200 text-red-900';
+            container.className = 'fixed top-6 left-1/2 -translate-x-1/2 z-[100000] shadow-2xl rounded-md min-w-[320px] max-w-md border overflow-hidden animate-in slide-in-from-top-4 fade-in duration-300 bg-red-50 border-red-200 text-red-900';
             iconEl.className = 'ph-fill ph-warning-circle text-red-600 text-xl shrink-0 mt-0.5';
         } else {
-            container.className = 'fixed top-6 left-1/2 -translate-x-1/2 z-[99999] shadow-2xl rounded-md min-w-[320px] max-w-md border overflow-hidden animate-in slide-in-from-top-4 fade-in duration-300 bg-green-50 border-green-200 text-green-900';
+            container.className = 'fixed top-6 left-1/2 -translate-x-1/2 z-[100000] shadow-2xl rounded-md min-w-[320px] max-w-md border overflow-hidden animate-in slide-in-from-top-4 fade-in duration-300 bg-green-50 border-green-200 text-green-900';
             iconEl.className = 'ph-fill ph-check-circle text-green-600 text-xl shrink-0 mt-0.5';
         }
 

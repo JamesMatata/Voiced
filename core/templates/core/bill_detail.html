@@ -41,9 +41,9 @@
 
         <div class="bg-zinc-950 rounded-md border border-zinc-800 overflow-hidden">
             <div class="flex border-b border-zinc-800 bg-zinc-900/50">
-                <button onclick="switchLang('en')" id="btn-en" class="lang-tab px-8 py-5 text-[11px] font-black uppercase tracking-[0.2em] border-r border-zinc-800 transition">English</button>
-                <button onclick="switchLang('sw')" id="btn-sw" class="lang-tab px-8 py-5 text-[11px] font-black uppercase tracking-[0.2em] border-r border-zinc-800 transition">Kiswahili</button>
-                <button onclick="switchLang('sh')" id="btn-sh" class="lang-tab px-8 py-5 text-[11px] font-black uppercase tracking-[0.2em] transition">Sheng</button>
+                <button onclick="switchLang('en')" id="btn-en" class="lang-tab flex-1 px-3 sm:px-6 py-4 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.15em] border-r border-zinc-800 transition text-center">English</button>
+                <button onclick="switchLang('sw')" id="btn-sw" class="lang-tab flex-1 px-3 sm:px-6 py-4 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.15em] border-r border-zinc-800 transition text-center">Kiswahili</button>
+                <button onclick="switchLang('sh')" id="btn-sh" class="lang-tab flex-1 px-3 sm:px-6 py-4 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.15em] transition text-center">Sheng</button>
             </div>
 
             <div class="p-8 md:p-14">
@@ -88,8 +88,8 @@
                         <a href="{% url 'login' %}?next={{ request.path }}" class="inline-block bg-zinc-950 text-white px-8 py-3 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-black transition">Sign In to Unlock</a>
                     </div>
                 </div>
-            {% elif not user_vote %}
-                <div class="bg-zinc-50 p-10 text-center border-b border-zinc-200 space-y-4">
+            {% else %}
+                <div id="participation-required" class="{% if user_vote %}hidden{% endif %} bg-zinc-50 p-10 text-center border-b border-zinc-200 space-y-4">
                     <i class="ph ph-chat-circle-dots text-4xl text-zinc-300"></i>
                     <h2 class="text-xl font-black uppercase tracking-tighter">Participation Required</h2>
                     <p class="text-xs text-zinc-500 font-medium max-w-sm mx-auto">You must cast your vote and provide a reason to unlock the AI Submission Draft and download the full analysis.</p>
@@ -97,8 +97,8 @@
                         <button onclick="document.getElementById('vote-reason').focus()" class="inline-block border border-zinc-950 text-zinc-950 px-8 py-3 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-zinc-100 transition">Cast Your Vote Now</button>
                     </div>
                 </div>
-            {% else %}
-                <div class="p-8 md:p-10 bg-white">
+
+                <div id="voice-heard-section" class="{% if not user_vote %}hidden{% endif %} p-8 md:p-10 bg-white">
                     <div class="flex flex-col md:flex-row justify-between items-start gap-8">
                         <div class="space-y-4 max-w-sm">
                             <div class="flex items-center gap-2">
@@ -192,7 +192,7 @@
                         </div>
 
                         <div id="recorded-reason-box" class="{% if not user_vote.reason %}hidden{% endif %} relative p-4 bg-zinc-50 border border-zinc-200 rounded-md mb-4">
-                            <p id="recorded-reason" class="text-xs text-zinc-600 font-medium leading-relaxed italic break-words line-clamp-2">"{{ user_vote.reason }}"</p>
+                            <p id="recorded-reason" class="text-xs text-zinc-600 font-medium leading-relaxed italic break-words line-clamp-2">{% if user_vote.reason %}"{{ user_vote.reason }}"{% endif %}</p>
                             <button id="reason-expand-btn" onclick="toggleReasonExpansion()" class="text-[10px] font-black uppercase text-zinc-900 mt-2 hidden hover:underline">Read more</button>
                         </div>
 
@@ -331,9 +331,33 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        location.reload();
+                        document.getElementById('count-support').innerText = data.support_count;
+                        document.getElementById('count-oppose').innerText = data.oppose_count;
+                        updateProgressBar(data.support_count, data.oppose_count);
+
+                        document.getElementById('stance-label').innerText = data.vote_type;
+                        if (data.reason) {
+                            document.getElementById('recorded-reason').innerText = `"${data.reason}"`;
+                            document.getElementById('recorded-reason-box').classList.remove('hidden');
+                        } else {
+                            document.getElementById('recorded-reason-box').classList.add('hidden');
+                        }
+
+                        document.getElementById('state-form').classList.add('hidden');
+                        document.getElementById('state-recorded').classList.remove('hidden');
+
+                        const reqSection = document.getElementById('participation-required');
+                        const heardSection = document.getElementById('voice-heard-section');
+                        if (reqSection) reqSection.classList.add('hidden');
+                        if (heardSection) heardSection.classList.remove('hidden');
+
+                        showAlert('Vote recorded successfully.', 'success');
+                        checkExpandButton();
+                    } else {
+                        showAlert(data.message || 'Error recording vote', 'error');
                     }
-                });
+                })
+                .catch(error => showAlert('An error occurred.', 'error'));
             });
         }
     });
@@ -413,7 +437,7 @@
     function showAlert(msg, type) {
         const container = document.getElementById('alert-container');
         container.innerText = msg;
-        container.className = `mb-6 p-4 rounded-md text-xs font-black uppercase tracking-widest border z-50 fixed top-6 left-1/2 -translate-x-1/2 bg-white w-11/12 max-w-md text-center ${type === 'success' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`;
+        container.className = `mb-6 p-4 rounded-md text-xs font-black uppercase tracking-widest border z-50 fixed top-6 left-1/2 -translate-x-1/2 bg-white w-11/12 max-md text-center ${type === 'success' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`;
         container.classList.remove('hidden');
         setTimeout(() => container.classList.add('hidden'), 5000);
     }
