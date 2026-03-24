@@ -1,9 +1,9 @@
 from django.db.models import Count, Max, Q
 from django.views.generic import ListView, DetailView, TemplateView
 from django.utils import timezone
-from django.http import JsonResponse, FileResponse, HttpResponse
+from django.http import JsonResponse, FileResponse, HttpResponse, Http404
 from django.db import transaction
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.contrib.auth.decorators import login_required
 from datetime import timedelta
 import io
@@ -233,6 +233,49 @@ class PrivacyView(TemplateView): template_name = 'core/privacy.html'
 class TermsView(TemplateView): template_name = 'core/terms.html'
 
 
+def bill_vote_counts(request, pk):
+    bill = get_object_or_404(Bill, pk=pk)
+    return render(request, 'core/partials/bill_vote_counts.html', {'bill': bill})
+
+
+def download_report(request, bill_id):
+    bill = get_object_or_404(Bill, id=bill_id)
+    total_votes = bill.support_count + bill.oppose_count
+    if total_votes < 50:
+        return JsonResponse({
+            'status': 'not_ready',
+            'message': f"Community insights unlock after 50 votes. {50 - total_votes} more votes needed."
+        }, status=425)
+    if bill.report_generation_in_progress:
+        return JsonResponse({
+            'status': 'processing',
+            'message': 'Generating Report... Please check again shortly.'
+        }, status=202)
+    if not bill.pdf_report:
+        return JsonResponse({
+            'status': 'not_ready',
+            'message': 'Report is not ready yet. Please try again in a moment.'
+        }, status=425)
+    return FileResponse(
+        bill.pdf_report.open('rb'),
+        as_attachment=True,
+        filename=f"national_pulse_{bill.id}.pdf"
+    )
+
+
+def national_pulse_status(request, bill_id):
+    bill = get_object_or_404(Bill, id=bill_id)
+    total_votes = bill.support_count + bill.oppose_count
+    votes_needed = max(0, 50 - total_votes)
+    return JsonResponse({
+        'total_votes': total_votes,
+        'votes_needed': votes_needed,
+        'eligible': total_votes >= 50,
+        'is_generating': bill.report_generation_in_progress,
+        'is_ready': bool(bill.pdf_report) and not bill.report_generation_in_progress
+    })
+
+
 def get_gemini_client():
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -336,7 +379,10 @@ def generate_write_up(request, bill_id):
 
     user_vote = BillVote.objects.filter(bill=bill, user=request.user).first()
     if not user_vote or not user_vote.reason:
-        return JsonResponse({'error': 'You must cast a vote with a reason to generate a submission.'}, status=400)
+        return JsonResponse({
+            'status': 'not_ready',
+            'error': 'You must cast a vote with a reason to generate a submission.'
+        }, status=425)
 
     try:
         client = get_gemini_client()

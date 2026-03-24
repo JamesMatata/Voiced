@@ -1,0 +1,28 @@
+<div
+    id="vote-counts-fragment"
+    hx-get="{% url 'bill_vote_counts' bill.id %}"
+    hx-trigger="every 5s"
+    hx-target="this"
+    hx-swap="outerHTML"
+>
+    <div class="flex justify-between items-end mb-2">
+        <div class="text-center">
+            <p id="count-support" class="text-xs font-black text-green-700 uppercase">{{ bill.support_count }}</p>
+            <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Support</p>
+        </div>
+        <div class="text-center">
+            <p id="count-oppose" class="text-xs font-black text-red-600 uppercase">{{ bill.oppose_count }}</p>
+            <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Oppose</p>
+        </div>
+    </div>
+
+    {% with total_votes=bill.support_count|add:bill.oppose_count %}
+        <div class="w-full bg-zinc-100 h-2 flex rounded-full overflow-hidden">
+            {% if total_votes > 0 %}
+                <div id="vote-progress-bar" class="bg-zinc-900 h-full transition-all duration-700" style="width: {% widthratio bill.support_count total_votes 100 %}%;"></div>
+            {% else %}
+                <div id="vote-progress-bar" class="bg-zinc-900 h-full transition-all duration-700" style="width: 50%;"></div>
+            {% endif %}
+        </div>
+    {% endwith %}
+</div>

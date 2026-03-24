@@ -3,6 +3,7 @@ import string
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
+from django.db import transaction
 from bills.models import Bill, BillVote
 from chat.models import ChatMessage
 from chat.moderation import check_message_toxicity
@@ -158,7 +159,23 @@ def ussd_callback(request):
                         return HttpResponse(content['rejected'], content_type='text/plain')
                     ChatMessage.objects.create(bill=bill, user=user, content=f"[USSD] {maoni}")
 
-                BillVote.objects.update_or_create(user=user, bill=bill, defaults={'vote_type': vt})
+                with transaction.atomic():
+                    vote, created = BillVote.objects.get_or_create(
+                        user=user,
+                        bill=bill,
+                        defaults={'vote_type': vt}
+                    )
+
+                    if not created and vote.vote_type != vt:
+                        if vote.vote_type == 'support':
+                            bill.support_count -= 1
+                            bill.oppose_count += 1
+                        else:
+                            bill.oppose_count -= 1
+                            bill.support_count += 1
+                        vote.vote_type = vt
+                        vote.save(update_fields=['vote_type'])
+                        bill.save(update_fields=['support_count', 'oppose_count'])
                 response = content['done']
             except Bill.DoesNotExist:
                 response = content['error']

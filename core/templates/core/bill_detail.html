@@ -1,6 +1,17 @@
 {% extends 'core/base.html' %}
 
 {% block content %}
+<style>
+    @keyframes livePulse {
+        0%, 100% { transform: scale(1); opacity: 0.9; }
+        50% { transform: scale(1.2); opacity: 0.45; }
+    }
+
+    .live-pulse-dot {
+        animation: livePulse 1.8s ease-in-out infinite;
+    }
+</style>
+
 <div class="mb-6 flex justify-between items-center">
     <a href="{% url 'bill_list' %}" class="text-xs font-black text-zinc-500 hover:text-black uppercase tracking-[0.2em] transition flex items-center gap-2">
         <i class="ph ph-arrow-left"></i> Back
@@ -67,80 +78,6 @@
             <div id="markdown-content" class="hidden break-words mb-12"></div>
         </div>
 
-        <section id="action-section" class="border-2 border-zinc-900 rounded-md overflow-hidden">
-            {% if is_closed %}
-                <div class="bg-zinc-50 p-10 text-center space-y-4">
-                    <i class="ph ph-clock-countdown text-4xl text-zinc-300"></i>
-                    <h2 class="text-xl font-black uppercase tracking-tighter">Participation Closed</h2>
-                    <p class="text-xs text-zinc-500 font-medium max-w-sm mx-auto">The deadline for public memoranda was <b>{{ bill.closing_date|date:"M d, Y" }}</b>. You can still download the final AI-generated sentiment report below.</p>
-                    <div class="pt-4">
-                        <button onclick="downloadReport('{% url 'bill_report_pdf' bill.id %}')" class="inline-block bg-zinc-950 text-white px-8 py-4 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-black transition flex items-center justify-center gap-3 mx-auto">
-                            <i class="ph ph-file-pdf text-lg"></i> Download Collective Report
-                        </button>
-                    </div>
-                </div>
-            {% elif not user.is_authenticated %}
-                <div class="bg-zinc-50 p-10 text-center space-y-4">
-                    <i class="ph ph-lock-key text-4xl text-zinc-300"></i>
-                    <h2 class="text-xl font-black uppercase tracking-tighter">Citizen Toolbox Locked</h2>
-                    <p class="text-xs text-zinc-500 font-medium max-w-sm mx-auto">Login to your account to unlock AI-powered petition drafting and collective sentiment reports.</p>
-                    <div class="pt-4">
-                        <a href="{% url 'login' %}?next={{ request.path }}" class="inline-block bg-zinc-950 text-white px-8 py-3 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-black transition">Sign In to Unlock</a>
-                    </div>
-                </div>
-            {% else %}
-                <div id="participation-required" class="{% if user_vote %}hidden{% endif %} bg-zinc-50 p-10 text-center border-b border-zinc-200 space-y-4">
-                    <i class="ph ph-chat-circle-dots text-4xl text-zinc-300"></i>
-                    <h2 class="text-xl font-black uppercase tracking-tighter">Participation Required</h2>
-                    <p class="text-xs text-zinc-500 font-medium max-w-sm mx-auto">You must cast your vote and provide a reason to unlock the AI Submission Draft and download the full analysis.</p>
-                    <div class="pt-4">
-                        <button onclick="document.getElementById('vote-reason').focus()" class="inline-block border border-zinc-950 text-zinc-950 px-8 py-3 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-zinc-100 transition">Cast Your Vote Now</button>
-                    </div>
-                </div>
-
-                <div id="voice-heard-section" class="{% if not user_vote %}hidden{% endif %} p-8 md:p-10 bg-white">
-                    <div class="flex flex-col md:flex-row justify-between items-start gap-8">
-                        <div class="space-y-4 max-w-sm">
-                            <div class="flex items-center gap-2">
-                                <i class="ph-fill ph-check-circle text-green-600 text-2xl"></i>
-                                <h2 class="text-3xl font-black uppercase tracking-tighter">Your Voice is Heard</h2>
-                            </div>
-                            <p class="text-xs text-zinc-500 font-medium leading-relaxed">You have actively participated in democracy. Now, utilize our AI to draft a formal submission to parliament or download the collective sentiment report for civic lobbying.</p>
-                        </div>
-                        <div class="flex flex-col w-full md:w-auto gap-4 shrink-0">
-                            <button onclick="fetchWriteUp()" id="btn-draft" class="w-full bg-white border border-zinc-950 text-zinc-950 px-8 py-4 rounded-md text-[10px] font-black uppercase tracking-[0.2em] hover:bg-zinc-50 transition flex items-center justify-center gap-3">
-                                <i class="ph ph-magic-wand text-lg"></i> Generate AI Draft
-                            </button>
-                            <button onclick="downloadReport('{% url 'bill_report_pdf' bill.id %}')" id="btn-report" class="w-full bg-zinc-950 text-white px-8 py-4 rounded-md text-[10px] font-black uppercase tracking-[0.2em] hover:bg-black transition flex items-center justify-center gap-3">
-                                <i class="ph ph-file-pdf text-lg"></i> Download PDF Report
-                            </button>
-                        </div>
-                    </div>
-
-                    <div id="ai-writeup-container" class="hidden mt-10 animate-in fade-in slide-in-from-top-4 duration-500">
-                        <div class="bg-zinc-50 border border-zinc-200 rounded-md overflow-hidden">
-                            <div class="bg-white border-b border-zinc-200 px-6 py-4 flex justify-between items-center">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
-                                    <span class="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-900">Official Submission Draft</span>
-                                </div>
-                                <button onclick="copyDraftText()" class="text-zinc-400 hover:text-zinc-950 transition-colors">
-                                    <i class="ph ph-copy text-xl"></i>
-                                </button>
-                            </div>
-                            <div class="p-6">
-                                <textarea id="draft-textarea" readonly class="w-full h-80 bg-transparent border-none focus:outline-none focus:ring-0 text-sm font-medium leading-relaxed text-zinc-700 resize-none font-mono"></textarea>
-                            </div>
-                            <div class="bg-zinc-100 px-6 py-4 flex justify-between items-center">
-                                <span class="text-[9px] font-black tracking-tighter uppercase text-zinc-400">VOICED<span class="text-red-600">.</span> AI ENGINE</span>
-                                <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Drafted for {{ user.username }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
-        </section>
-
         <div class="pt-10 border-t border-zinc-100">
             <h4 class="font-black text-[11px] uppercase tracking-[0.3em] text-zinc-400 mb-6">Affected Groups</h4>
             <div class="flex flex-wrap gap-3">
@@ -152,29 +89,20 @@
     </div>
 
     <div class="space-y-12">
-        <div class="lg:sticky lg:top-24 space-y-12">
+        <div class="flex flex-col gap-12 lg:sticky lg:top-24">
 
-            <div class="space-y-6">
+            <div class="space-y-6 order-4 md:order-none">
                 <div class="flex items-center gap-2 mb-2">
                     <span class="h-px bg-zinc-200 flex-grow"></span>
                     <h3 class="font-black text-[11px] uppercase tracking-[0.3em] text-zinc-400">Participation</h3>
                     <span class="h-px bg-zinc-200 flex-grow"></span>
                 </div>
-
-                <div class="flex justify-between items-end mb-2">
-                    <div class="text-center">
-                        <p id="count-support" class="text-xs font-black text-green-700 uppercase">{{ bill.support_count }}</p>
-                        <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Support</p>
-                    </div>
-                    <div class="text-center">
-                        <p id="count-oppose" class="text-xs font-black text-red-600 uppercase">{{ bill.oppose_count }}</p>
-                        <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Oppose</p>
-                    </div>
+                <div class="flex items-center justify-end gap-2">
+                    <span class="h-2 w-2 rounded-full bg-green-500 live-pulse-dot"></span>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Live Results</span>
                 </div>
 
-                <div class="w-full bg-zinc-100 h-2 flex rounded-full overflow-hidden">
-                    <div id="vote-progress-bar" class="bg-zinc-900 h-full transition-all duration-700 w-0"></div>
-                </div>
+                {% include 'core/partials/bill_vote_counts.html' %}
 
                 {% if is_closed %}
                     <div class="bg-zinc-900 text-white p-6 rounded-md text-center space-y-3">
@@ -233,7 +161,86 @@
                 {% endif %}
             </div>
 
-            <div class="bg-zinc-900 text-white p-6 rounded-md border border-black overflow-hidden relative group">
+            <section class="space-y-4 order-5 md:order-none">
+                {% if is_closed %}
+                    <div class="bg-zinc-50 p-6 text-center space-y-4 border border-zinc-200 rounded-md">
+                        <i class="ph ph-clock-countdown text-4xl text-zinc-300"></i>
+                        <h2 class="text-xl font-black uppercase tracking-tighter">Participation Closed</h2>
+                        <p class="text-xs text-zinc-500 font-medium max-w-sm mx-auto">The deadline for public memoranda was <b>{{ bill.closing_date|date:"M d, Y" }}</b>. You can still download the final AI-generated sentiment report below.</p>
+                        <div class="pt-2">
+                            <button onclick="downloadReport('{% url 'bill_report_pdf' bill.id %}')" class="inline-block bg-zinc-950 text-white px-8 py-4 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-black transition flex items-center justify-center gap-3 mx-auto">
+                                <i class="ph ph-file-pdf text-lg"></i> Download Collective Report
+                            </button>
+                        </div>
+                    </div>
+                {% elif not user.is_authenticated %}
+                    <div class="bg-zinc-50 p-6 text-center space-y-4 border border-zinc-200 rounded-md">
+                        <i class="ph ph-lock-key text-4xl text-zinc-300"></i>
+                        <h2 class="text-xl font-black uppercase tracking-tighter">Citizen Toolbox Locked</h2>
+                        <p class="text-xs text-zinc-500 font-medium max-w-sm mx-auto">Login to your account to unlock AI-powered petition drafting and collective sentiment reports.</p>
+                        <div class="pt-2">
+                            <a href="{% url 'login' %}?next={{ request.path }}" class="inline-block bg-zinc-950 text-white px-8 py-3 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-black transition">Sign In to Unlock</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div id="participation-required" class="{% if user_vote %}hidden{% endif %} bg-zinc-50 p-6 text-center border border-zinc-200 rounded-md space-y-4">
+                        <i class="ph ph-chat-circle-dots text-4xl text-zinc-300"></i>
+                        <h2 class="text-xl font-black uppercase tracking-tighter">Participation Required</h2>
+                        <p class="text-xs text-zinc-500 font-medium max-w-sm mx-auto">You must cast your vote and provide a reason to unlock the AI Submission Draft and download the full analysis.</p>
+                        <div class="pt-2">
+                            <button onclick="document.getElementById('vote-reason').focus()" class="inline-block border border-zinc-950 text-zinc-950 px-8 py-3 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-zinc-100 transition">Cast Your Vote Now</button>
+                        </div>
+                    </div>
+
+                    <div id="voice-heard-section" class="{% if not user_vote %}hidden{% endif %} space-y-4">
+                        <div class="border border-zinc-200 rounded-md p-5 bg-zinc-50">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-900">National Pulse Report</h3>
+                                <i class="ph ph-chart-pie-slice text-zinc-500"></i>
+                            </div>
+                            <p id="pulse-status-msg" class="text-[11px] text-zinc-500 font-medium leading-relaxed mb-4">Checking report readiness...</p>
+                            <button id="btn-pulse-report" onclick="downloadPulseReport()" class="w-full bg-zinc-900 text-white px-6 py-3 rounded-md text-[10px] font-black uppercase tracking-[0.2em] hover:bg-black transition flex items-center justify-center gap-2 disabled:bg-zinc-300 disabled:text-zinc-500 disabled:cursor-not-allowed" disabled>
+                                <i class="ph ph-file-pdf text-lg"></i>
+                                <span id="btn-pulse-text">Download Report</span>
+                            </button>
+                        </div>
+
+                        <div class="border border-zinc-200 rounded-md p-5 bg-white">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-900">AI Legal Draft</h3>
+                                <i class="ph ph-scroll text-zinc-500"></i>
+                            </div>
+                            <p class="text-[11px] text-zinc-500 font-medium leading-relaxed mb-4">Generate a formal memorandum draft to Parliament based on your submitted position.</p>
+                            <button onclick="fetchWriteUp()" id="btn-draft" class="w-full bg-white border border-zinc-950 text-zinc-950 px-6 py-3 rounded-md text-[10px] font-black uppercase tracking-[0.2em] hover:bg-zinc-50 transition flex items-center justify-center gap-2">
+                                <i class="ph ph-magic-wand text-lg"></i> Generate Draft
+                            </button>
+                        </div>
+
+                        <div id="ai-writeup-container" class="hidden mt-2 animate-in fade-in slide-in-from-top-4 duration-500">
+                            <div class="bg-zinc-50 border border-zinc-200 rounded-md overflow-hidden">
+                                <div class="bg-white border-b border-zinc-200 px-6 py-4 flex justify-between items-center">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                                        <span class="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-900">Official Submission Draft</span>
+                                    </div>
+                                    <button onclick="copyDraftText()" class="text-zinc-400 hover:text-zinc-950 transition-colors">
+                                        <i class="ph ph-copy text-xl"></i>
+                                    </button>
+                                </div>
+                                <div class="p-6">
+                                    <textarea id="draft-textarea" readonly class="w-full h-80 bg-transparent border-none focus:outline-none focus:ring-0 text-sm font-medium leading-relaxed text-zinc-700 resize-none font-mono"></textarea>
+                                </div>
+                                <div class="bg-zinc-100 px-6 py-4 flex justify-between items-center">
+                                    <span class="text-[9px] font-black tracking-tighter uppercase text-zinc-400">VOICED<span class="text-red-600">.</span> AI ENGINE</span>
+                                    <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Drafted for {{ user.username }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </section>
+
+            <div class="bg-zinc-900 text-white p-6 rounded-md border border-black overflow-hidden relative group order-6 md:order-none">
                 <div class="relative z-10">
                     <h3 class="font-black text-[11px] uppercase tracking-[0.2em] mb-3">Spread the Word</h3>
                     <p class="text-xs text-zinc-400 font-medium mb-6 leading-relaxed">Legislation affects everyone. Send this analysis to your circles.</p>
@@ -298,7 +305,6 @@
             document.getElementById('detail-skeleton').classList.add('hidden');
             document.getElementById('summary-text').classList.remove('hidden');
             document.getElementById('markdown-content').classList.remove('hidden');
-            updateProgressBar({{ bill.support_count }}, {{ bill.oppose_count }});
         }, 600);
 
         const reasonInput = document.getElementById('vote-reason');
@@ -360,6 +366,9 @@
                 .catch(error => showAlert('An error occurred.', 'error'));
             });
         }
+
+        refreshPulseStatus();
+        setInterval(refreshPulseStatus, 5000);
     });
 
     async function fetchWriteUp() {
@@ -396,11 +405,15 @@
 
     async function downloadReport(url) {
         const btn = document.getElementById('btn-report');
-        const originalText = btn.innerHTML;
-        const currentWidth = btn.getBoundingClientRect().width;
-        btn.style.width = `${currentWidth}px`;
-        btn.innerHTML = '<i class="ph ph-spinner animate-spin text-lg"></i> Processing...';
-        btn.disabled = true;
+        const hasButtonState = !!btn;
+        let originalText = '';
+        if (hasButtonState) {
+            originalText = btn.innerHTML;
+            const currentWidth = btn.getBoundingClientRect().width;
+            btn.style.width = `${currentWidth}px`;
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin text-lg"></i> Processing...';
+            btn.disabled = true;
+        }
 
         try {
             const response = await fetch(url);
@@ -421,9 +434,93 @@
         } catch (error) {
             showAlert(error.message, 'error');
         } finally {
-            btn.innerHTML = originalText;
-            btn.style.width = '';
+            if (hasButtonState) {
+                btn.innerHTML = originalText;
+                btn.style.width = '';
+                btn.disabled = false;
+            }
+        }
+    }
+
+    async function refreshPulseStatus() {
+        const statusMsg = document.getElementById('pulse-status-msg');
+        const btn = document.getElementById('btn-pulse-report');
+        const btnText = document.getElementById('btn-pulse-text');
+        if (!statusMsg || !btn || !btnText) return;
+
+        try {
+            const response = await fetch("{% url 'national_pulse_status' bill.id %}", {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await response.json();
+
+            if (!data.eligible) {
+                statusMsg.innerText = `Community insights unlock after 50 votes to ensure a representative "National Pulse". ${data.votes_needed} more votes needed.`;
+                btn.disabled = true;
+                btnText.innerText = "Download Report";
+                return;
+            }
+
+            if (data.is_generating) {
+                statusMsg.innerText = "Generating Report... This usually takes a moment.";
+                btn.disabled = false;
+                btnText.innerText = "Generating Report...";
+                return;
+            }
+
+            if (data.is_ready) {
+                statusMsg.innerText = "Community sentiment report is ready to download.";
+                btn.disabled = false;
+                btnText.innerText = "Download Report";
+                return;
+            }
+
+            statusMsg.innerText = "Report is being prepared. Please check again shortly.";
             btn.disabled = false;
+            btnText.innerText = "Check Report";
+        } catch (error) {
+            statusMsg.innerText = "Unable to refresh report status right now.";
+            btn.disabled = true;
+            btnText.innerText = "Download Report";
+        }
+    }
+
+    async function downloadPulseReport() {
+        const btn = document.getElementById('btn-pulse-report');
+        const btnText = document.getElementById('btn-pulse-text');
+        if (!btn || !btnText) return;
+
+        const originalText = btnText.innerText;
+        btnText.innerHTML = '<i class="ph ph-spinner animate-spin text-lg"></i> Processing';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch("{% url 'download_report' bill.id %}", {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                showAlert(data.message || 'Processing. Please check again shortly.', 'error');
+                await refreshPulseStatus();
+                return;
+            }
+
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `national_pulse_{{ bill.id }}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(downloadUrl);
+            showAlert('Report downloaded successfully.', 'success');
+        } catch (error) {
+            showAlert('Processing. Please try again shortly.', 'error');
+        } finally {
+            btnText.innerText = originalText;
+            await refreshPulseStatus();
         }
     }
 
@@ -519,9 +616,11 @@
     function revealReason() { document.getElementById('reason-section').classList.remove('hidden'); }
 
     function updateProgressBar(support, oppose) {
+        const bar = document.getElementById('vote-progress-bar');
+        if (!bar) return;
         const total = support + oppose;
         const percentage = total > 0 ? (support / total) * 100 : 50;
-        document.getElementById('vote-progress-bar').style.width = percentage + '%';
+        bar.style.width = percentage + '%';
     }
 </script>
 {% endblock %}

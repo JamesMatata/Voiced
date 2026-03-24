@@ -36,6 +36,9 @@ class Bill(TimeStampedModel):
     view_count = models.PositiveIntegerField(default=0)
     support_count = models.PositiveIntegerField(default=0)
     oppose_count = models.PositiveIntegerField(default=0)
+    pdf_report = models.FileField(upload_to='bill_reports/', null=True, blank=True)
+    last_report_vote_count = models.PositiveIntegerField(default=0)
+    report_generation_in_progress = models.BooleanField(default=False)
 
     objects = BillManager()
 
@@ -91,4 +94,17 @@ class BillVote(models.Model):
                 self.bill.support_count += 1
             else:
                 self.bill.oppose_count += 1
-            self.bill.save(update_fields=['support_count', 'oppose_count'])
+            total_votes = self.bill.support_count + self.bill.oppose_count
+            update_fields = ['support_count', 'oppose_count']
+
+            if total_votes >= 50 and total_votes >= self.bill.last_report_vote_count + 50:
+                self.bill.last_report_vote_count = total_votes
+                update_fields.append('last_report_vote_count')
+                self.bill.report_generation_in_progress = True
+                update_fields.append('report_generation_in_progress')
+
+            self.bill.save(update_fields=update_fields)
+
+            if 'last_report_vote_count' in update_fields:
+                from .tasks import generate_bill_report_pdf
+                generate_bill_report_pdf.delay(str(self.bill.id))
