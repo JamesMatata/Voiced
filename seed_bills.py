@@ -59,7 +59,7 @@ def seed_bills():
         {
             "title": "Finance Bill 2026",
             "source_url": "https://parliament.go.ke/bills/finance-2026",
-            "status": Bill.Status.ACTIVE,
+            "status": Bill.Status.PUBLISHED,
             "closing_date": today + timedelta(days=14),
             "ai_analysis": finance_bill_data,
             "view_count": 1240,
@@ -69,7 +69,7 @@ def seed_bills():
         {
             "title": "Digital Health Act 2026",
             "source_url": "https://parliament.go.ke/bills/health-2026",
-            "status": Bill.Status.ACTIVE,
+            "status": Bill.Status.PUBLISHED,
             "closing_date": today + timedelta(days=21),
             "ai_analysis": health_bill_data,
             "view_count": 850,

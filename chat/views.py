@@ -1,11 +1,13 @@
 import json
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse
 from bills.models import Bill
 from accounts.models import UserProfile
-from chat.models import ChatMessage, MessageReaction
+from chat.models import ChatMessage, MessageReaction, ChatMessageAlias
+from chat.utils import generate_random_alias
 
 from .moderation import check_message_toxicity
 
@@ -16,6 +18,15 @@ class BillChatView(LoginRequiredMixin, DetailView):
     context_object_name = 'bill'
     login_url = '/auth/login/'
 
+    def get_queryset(self):
+        return Bill.objects.filter(status=Bill.Status.PUBLISHED)
+
+    def get(self, request, *args, **kwargs):
+        bill = get_object_or_404(Bill, pk=kwargs.get('pk'), status=Bill.Status.PUBLISHED)
+        if bill.is_archived:
+            return redirect(f"{reverse('bill_list')}?archived=1")
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
@@ -23,16 +34,22 @@ class BillChatView(LoginRequiredMixin, DetailView):
             UserProfile.objects.create(user=user)
             user.refresh_from_db()
 
-        context['user_alias'] = user.profile.chat_alias
+        alias_obj, _ = ChatMessageAlias.objects.get_or_create(
+            user=user,
+            bill=self.object,
+            defaults={'alias_name': generate_random_alias()}
+        )
+        if not alias_obj.alias_name:
+            alias_obj.alias_name = generate_random_alias()
+            alias_obj.save(update_fields=['alias_name'])
+        context['user_alias'] = alias_obj.alias_name
         context['user_id'] = user.id
         context['is_closed'] = self.object.current_status == Bill.Status.CLOSED
 
         if self.object.closing_date:
             context['closing_date_iso'] = self.object.closing_date.isoformat()
 
-        messages = self.object.messages.select_related(
-            'user__profile', 'parent_message'
-        ).order_by('created_at')[:100]
+        messages = self.object.messages.select_related('parent_message').order_by('created_at')[:100]
 
         user_reactions = MessageReaction.objects.filter(
             user=user, message__in=messages
@@ -77,6 +94,6 @@ class BillChatView(LoginRequiredMixin, DetailView):
             'status': 'success',
             'msg_id': msg.id,
             'content': msg.content,
-            'user_alias': request.user.profile.chat_alias,
+            'user_alias': msg.get_display_alias(),
             'parent_content': parent_content
         })

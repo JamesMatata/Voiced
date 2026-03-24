@@ -10,7 +10,7 @@ class BillViewSet(viewsets.ReadOnlyModelViewSet):
     Provides standard REST actions (list, retrieve) for Next.js.
     Only exposes bills that have been processed by the AI.
     """
-    queryset = Bill.objects.filter(status=Bill.Status.ACTIVE).order_by('-created_at')
+    queryset = Bill.objects.filter(status=Bill.Status.PUBLISHED).order_by('-created_at')
     serializer_class = BillSerializer
 
     @action(detail=True, methods=['post'])

@@ -34,7 +34,7 @@
                     <div class="flex items-center gap-2 mt-1">
                         <span id="status-pulse" class="w-1.5 h-1.5 rounded-full {% if is_closed %}bg-zinc-500{% else %}bg-green-500 animate-pulse{% endif %}"></span>
                         <p class="text-[9px] md:text-[10px] text-zinc-400 font-black uppercase tracking-widest truncate">
-                            <span id="countdown-label">Live Alias: {{ user_alias }}</span>
+                            <span id="countdown-label">Live Discussion</span>
                             <span id="chat-countdown" class="ml-2 text-red-500 hidden"></span>
                         </p>
                     </div>
@@ -54,7 +54,7 @@
                 <div class="flex w-full {% if msg.user.id == user_id %}justify-end{% else %}justify-start{% endif %} group" id="msg-{{ msg.id }}">
                     <div class="max-w-[92%] md:max-w-[70%] lg:max-w-[60%]">
                         <div class="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 px-1">
-                            {% if msg.user.id == user_id %}You{% else %}{{ msg.user.profile.chat_alias }}{% endif %}
+                            {% if msg.user.id == user_id %}You{% else %}{{ msg.get_display_alias }}{% endif %}
                         </div>
                         <div class="relative p-3 md:p-4 rounded-md border {% if msg.user.id == user_id %}bg-zinc-900 border-zinc-900 text-white{% else %}bg-white border-zinc-200 text-zinc-900{% endif %} shadow-sm">
                             {% if msg.parent_message %}
@@ -91,6 +91,11 @@
 
     <div class="shrink-0 bg-zinc-50 border-t border-zinc-200 pb-safe w-full">
         <div class="max-w-7xl mx-auto w-full relative">
+            {% if is_closed %}
+                <div class="mx-4 md:mx-8 mt-4 px-4 py-3 bg-zinc-100 border border-zinc-300 rounded-md text-[10px] font-black uppercase tracking-widest text-zinc-600 text-center">
+                    This discussion is now closed.
+                </div>
+            {% endif %}
             <div id="lock-overlay" class="{% if not is_closed %}hidden{% endif %} absolute inset-0 z-50 bg-zinc-50/80 backdrop-blur-[2px] flex items-center justify-center">
                 <div class="flex items-center gap-3 px-6 py-3 bg-zinc-900 rounded-full text-white shadow-lg">
                     <i class="ph-fill ph-lock-key text-red-500"></i>
@@ -293,11 +298,7 @@
                 chatSocket.send(JSON.stringify({
                     'type': 'new_message',
                     'message_id': data.msg_id,
-                    'content': content,
-                    'sender_alias': data.user_alias,
-                    'user_id': myUserId,
-                    'parent_id': replyingToId,
-                    'parent_content': data.parent_content
+                    'content': content
                 }));
 
                 messageInput.value = '';

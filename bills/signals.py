@@ -6,7 +6,7 @@ from notifications.utils import send_live_notification
 
 @receiver(post_save, sender=Bill)
 def bill_processed_notification(sender, instance, created, **kwargs):
-    if instance.is_processed_by_ai and instance.status == Bill.Status.ACTIVE and not instance.notification_sent:
+    if instance.is_processed_by_ai and instance.status == Bill.Status.PUBLISHED and not instance.notification_sent:
 
         Bill.objects.filter(id=instance.id).update(notification_sent=True)
 

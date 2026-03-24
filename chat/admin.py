@@ -1,16 +1,16 @@
 from django.contrib import admin
-from .models import ChatMessage, MessageReaction
+from .models import ChatMessage, MessageReaction, ChatMessageAlias
 
 @admin.register(ChatMessage)
 class ChatMessageAdmin(admin.ModelAdmin):
     list_display = ('get_alias', 'bill_short', 'content_truncated', 'upvotes', 'downvotes', 'created_at')
     list_filter = ('created_at', 'bill')
-    search_fields = ('content', 'user__username', 'user__profile__chat_alias')
+    search_fields = ('content', 'user__username', 'author_alias')
     readonly_fields = ('upvotes', 'downvotes', 'created_at')
     raw_id_fields = ('parent_message', 'user', 'bill')
 
     def get_alias(self, obj):
-        return obj.user.profile.chat_alias if hasattr(obj.user, 'profile') else obj.user.username
+        return obj.author_alias
     get_alias.short_description = 'User Alias'
 
     def bill_short(self, obj):
@@ -41,3 +41,10 @@ class MessageReactionAdmin(admin.ModelAdmin):
         css = {
             'all': ('admin/css/custom_admin.css',)
         }
+
+
+@admin.register(ChatMessageAlias)
+class ChatMessageAliasAdmin(admin.ModelAdmin):
+    list_display = ('alias_name', 'user', 'bill')
+    search_fields = ('alias_name', 'user__username', 'bill__title')
+    raw_id_fields = ('user', 'bill')

@@ -3,8 +3,9 @@ from django.views.generic import ListView, DetailView, TemplateView
 from django.utils import timezone
 from django.http import JsonResponse, FileResponse, HttpResponse, Http404
 from django.db import transaction
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 from datetime import timedelta
 import io
 import os
@@ -23,16 +24,10 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Only show Ongoing (Active) bills on Home
+        # Only show published bills on Home
         context['latest_bills'] = Bill.objects.active_bills().order_by('-created_at')[:3]
 
-        # Trending Discussions only for currently viewable bills (Active or Closed < 30 days)
-        visibility_threshold = timezone.now().date() - timedelta(days=30)
-        context['trending_discussions'] = Bill.objects.filter(
-            Q(status=Bill.Status.ACTIVE) |
-            Q(status=Bill.Status.CLOSED, closing_date__gte=visibility_threshold),
-            messages__isnull=False
-        ).annotate(
+        context['trending_discussions'] = Bill.objects.active_bills().filter(messages__isnull=False).annotate(
             last_message=Max('messages__created_at')
         ).order_by('-last_message')[:3]
 
@@ -46,13 +41,11 @@ class BillListView(ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        filter_type = self.request.GET.get('filter', 'ongoing')
+        filter_type = self.request.GET.get('status') or self.request.GET.get('filter', 'ongoing')
         search_query = self.request.GET.get('q', '').strip()
-
         today = timezone.now().date()
         threshold = today - timedelta(days=30)
-
-        qs = Bill.objects.filter(is_processed_by_ai=True)
+        qs = Bill.objects.filter(is_processed_by_ai=True, status=Bill.Status.PUBLISHED)
 
         if search_query:
             qs = qs.filter(
@@ -61,15 +54,14 @@ class BillListView(ListView):
             )
 
         if filter_type == 'ongoing':
-            qs = qs.filter(status=Bill.Status.ACTIVE).filter(
-                Q(closing_date__gte=today) | Q(closing_date__isnull=True)
-            )
+            qs = qs.filter(Q(closing_date__isnull=True) | Q(closing_date__gte=today))
         elif filter_type == 'closed':
-            qs = qs.filter(status=Bill.Status.CLOSED, closing_date__gte=threshold)
+            qs = qs.filter(closing_date__lt=today, closing_date__gte=threshold)
         elif filter_type == 'all':
             qs = qs.filter(
-                Q(status=Bill.Status.ACTIVE) |
-                Q(status=Bill.Status.CLOSED, closing_date__gte=threshold)
+                Q(closing_date__isnull=True) |
+                Q(closing_date__gte=today) |
+                Q(closing_date__gte=threshold, closing_date__lt=today)
             )
 
         return qs.order_by('-created_at')
@@ -78,6 +70,7 @@ class BillListView(ListView):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             # We bypass pagination for search/filter results to ensure everything shows
             queryset = self.get_queryset()
+            active_status = request.GET.get('status') or request.GET.get('filter', 'ongoing')
             data = []
             for b in queryset:
                 data.append({
@@ -91,13 +84,16 @@ class BillListView(ListView):
                     'view_count': b.view_count,
                     'detail_url': f"/bills/{b.id}/"
                 })
-            return JsonResponse({'bills': data})
+            return JsonResponse({'bills': data, 'active_status': active_status})
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['current_status_filter'] = self.request.GET.get('status') or self.request.GET.get('filter', 'ongoing')
+        context['current_search_query'] = self.request.GET.get('q', '').strip()
         context['hot_bills'] = Bill.objects.filter(
-            status=Bill.Status.ACTIVE,
+            status=Bill.Status.PUBLISHED,
+            closing_date__gte=timezone.now().date(),
             view_count__gte=1000,
             is_processed_by_ai=True
         ).order_by('-view_count')[:3]
@@ -109,13 +105,16 @@ class BillDetailView(DetailView):
     template_name = 'core/bill_detail.html'
     context_object_name = 'bill'
 
+    def get(self, request, *args, **kwargs):
+        bill = get_object_or_404(Bill, pk=kwargs.get('pk'), status=Bill.Status.PUBLISHED)
+        if bill.is_archived:
+            return redirect(f"{reverse('bill_list')}?archived=1")
+        return super().get(request, *args, **kwargs)
+
     def get_object(self):
         obj = super().get_object()
-        if obj.status == Bill.Status.CLOSED and obj.closing_date:
-            visibility_threshold = timezone.now().date() - timedelta(days=30)
-            if obj.closing_date < visibility_threshold:
-                from django.http import Http404
-                raise Http404("This bill is no longer available for public viewing.")
+        if obj.status != Bill.Status.PUBLISHED:
+            raise Http404("This bill is not publicly available.")
 
         session_key = f'viewed_bill_{obj.id}'
         last_viewed = self.request.session.get(session_key)
@@ -130,7 +129,7 @@ class BillDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         bill = self.get_object()
-        context['is_closed'] = bill.current_status == Bill.Status.CLOSED
+        context['is_closed'] = bill.is_closed
 
         if bill.closing_date:
             context['closing_date_iso'] = bill.closing_date.isoformat()
@@ -148,9 +147,8 @@ class BillDetailView(DetailView):
             return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=403)
 
         bill = self.get_object()
-        if bill.current_status == Bill.Status.CLOSED:
-            return JsonResponse({'status': 'error', 'message': 'Public participation for this bill has ended.'},
-                                status=403)
+        if bill.is_closed:
+            return JsonResponse({'status': 'error', 'message': 'This bill is closed. Voting is no longer active.'}, status=403)
 
         vote_type = request.POST.get('vote_type')
         reason = request.POST.get('reason', '')
@@ -199,17 +197,16 @@ class DiscussionListView(ListView):
         base_qs = Bill.objects.annotate(
             msg_count=Count('messages'),
             last_activity=Max('messages__created_at')
-        ).filter(msg_count__gt=0)
+        ).filter(msg_count__gt=0, status=Bill.Status.PUBLISHED)
         if filter_type == 'ongoing':
-            queryset = base_qs.filter(status=Bill.Status.ACTIVE).filter(
-                Q(closing_date__gte=today) | Q(closing_date__isnull=True)
-            )
+            queryset = base_qs.filter(Q(closing_date__isnull=True) | Q(closing_date__gte=today))
         elif filter_type == 'closed':
-            queryset = base_qs.filter(status=Bill.Status.CLOSED, closing_date__gte=threshold)
+            queryset = base_qs.filter(closing_date__lt=today, closing_date__gte=threshold)
         else:
             queryset = base_qs.filter(
-                Q(status=Bill.Status.ACTIVE) |
-                Q(status=Bill.Status.CLOSED, closing_date__gte=threshold)
+                Q(closing_date__isnull=True) |
+                Q(closing_date__gte=today) |
+                Q(closing_date__gte=threshold, closing_date__lt=today)
             )
         query = self.request.GET.get('q')
         if query:
@@ -239,7 +236,7 @@ def bill_vote_counts(request, pk):
 
 
 def download_report(request, bill_id):
-    bill = get_object_or_404(Bill, id=bill_id)
+    bill = get_object_or_404(Bill, id=bill_id, status=Bill.Status.PUBLISHED)
     total_votes = bill.support_count + bill.oppose_count
     if total_votes < 50:
         return JsonResponse({
@@ -264,7 +261,7 @@ def download_report(request, bill_id):
 
 
 def national_pulse_status(request, bill_id):
-    bill = get_object_or_404(Bill, id=bill_id)
+    bill = get_object_or_404(Bill, id=bill_id, status=Bill.Status.PUBLISHED)
     total_votes = bill.support_count + bill.oppose_count
     votes_needed = max(0, 50 - total_votes)
     return JsonResponse({
@@ -286,11 +283,7 @@ def get_gemini_client():
 @login_required
 def generate_bill_pdf(request, bill_id):
     # PDF generation allowed for Active AND Closed (<30 days) bills
-    bill = get_object_or_404(Bill, id=bill_id)
-
-    visibility_threshold = timezone.now().date() - timedelta(days=30)
-    if bill.status == Bill.Status.CLOSED and bill.closing_date < visibility_threshold:
-        return JsonResponse({'error': 'Report is no longer available.'}, status=410)
+    bill = get_object_or_404(Bill, id=bill_id, status=Bill.Status.PUBLISHED)
 
     votes = BillVote.objects.filter(bill=bill).exclude(reason__isnull=True).exclude(reason__exact='')
 
@@ -371,11 +364,9 @@ def generate_bill_pdf(request, bill_id):
 
 @login_required
 def generate_write_up(request, bill_id):
-    bill = get_object_or_404(Bill, id=bill_id)
-
-    # Restriction: No AI write-ups for closed bills
-    if bill.current_status == Bill.Status.CLOSED:
-        return JsonResponse({'error': 'Personal write-ups are disabled for closed bills.'}, status=403)
+    bill = get_object_or_404(Bill, id=bill_id, status=Bill.Status.PUBLISHED)
+    if bill.is_closed:
+        return JsonResponse({'error': 'This bill is closed. Draft generation is disabled.'}, status=403)
 
     user_vote = BillVote.objects.filter(bill=bill, user=request.user).first()
     if not user_vote or not user_vote.reason:

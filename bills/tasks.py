@@ -29,39 +29,57 @@ def process_bill_with_ai(bill_id):
     if analysis_data:
         bill.ai_analysis = analysis_data
         bill.is_processed_by_ai = True
-        bill.status = Bill.Status.REVIEW
+        bill.status = Bill.Status.PENDING_REVIEW
         bill.save()
         return f"Awaiting Human Approval: {bill.title}"
     return "Analysis Failed"
 
-@shared_task
-def run_all_scrapers():
+
+def run_all_scrapers_sync():
     scrapers = [ParliamentScraper(), MyGovScraper(), GazetteScraper()]
     total_added = 0
 
     for scraper in scrapers:
-        result = scraper.scrape()
+        try:
+            result = scraper.scrape()
+        except Exception as exc:
+            result = {"success": False, "error": str(exc), "data": []}
+
         log = ScrapeLog.objects.create(
             source_name=scraper.SOURCE_NAME,
-            was_successful=result["success"],
-            error_message=result["error"],
-            bills_found=len(result["data"])
+            was_successful=result.get("success", False),
+            error_message=result.get("error"),
+            bills_found=len(result.get("data", []))
         )
 
-        if not result["success"]:
+        if not result.get("success"):
             continue
 
         added_count = 0
         with transaction.atomic():
-            for item in result["data"]:
-                if Bill.objects.filter(source_url=item["source_url"]).exists():
+            for item in result.get("data", []):
+                source_url = item.get("source_url")
+                normalized_title = item.get("normalized_title")
+                if not source_url:
                     continue
 
-                new_bill = Bill.objects.create(
-                    title=item["title"],
-                    source_url=item["source_url"],
-                    document_hash=item["document_hash"],
+                duplicate_qs = Bill.objects.filter(source_url=source_url)
+                if normalized_title:
+                    duplicate_qs = duplicate_qs | Bill.objects.filter(title__iexact=item.get("title", ""))
+
+                if duplicate_qs.exists():
+                    continue
+
+                new_bill, created = Bill.objects.get_or_create(
+                    source_url=source_url,
+                    defaults={
+                        'title': item.get("title", "Untitled Bill"),
+                        'document_hash': item.get("document_hash", ""),
+                        'status': Bill.Status.DRAFT,
+                    }
                 )
+                if not created:
+                    continue
                 added_count += 1
                 total_added += 1
                 process_bill_with_ai.delay(new_bill.id)
@@ -69,6 +87,11 @@ def run_all_scrapers():
         log.bills_added = added_count
         log.save()
     return f"Done: {total_added} bills added"
+
+
+@shared_task
+def run_all_scrapers():
+    return run_all_scrapers_sync()
 
 
 @shared_task

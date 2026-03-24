@@ -5,7 +5,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from django.db import transaction
 from bills.models import Bill, BillVote
-from chat.models import ChatMessage
 from chat.moderation import check_message_toxicity
 
 @csrf_exempt
@@ -112,13 +111,13 @@ def ussd_callback(request):
             response = content['search']
         elif level == 2:
             try:
-                bill = Bill.objects.get(short_id=parts[1])
+                bill = Bill.objects.get(short_id=parts[1], status=Bill.Status.PUBLISHED)
                 response = content['dashboard'].format(title=bill.title[:70])
             except Bill.DoesNotExist:
                 response = content['error']
         elif level == 3:
             try:
-                bill = Bill.objects.get(short_id=parts[1])
+                bill = Bill.objects.get(short_id=parts[1], status=Bill.Status.PUBLISHED)
                 if parts[2] == "1":
                     mapping = {'en': 'english', 'sw': 'swahili', 'sh': 'sheng'}
                     target_key = mapping.get(lang, 'english')
@@ -149,7 +148,7 @@ def ussd_callback(request):
             response = content['reason']
         elif level == 5 and parts[2] == "2":
             try:
-                bill = Bill.objects.get(short_id=parts[1])
+                bill = Bill.objects.get(short_id=parts[1], status=Bill.Status.PUBLISHED)
                 vt = 'support' if parts[3] == "1" else 'oppose'
                 maoni = parts[4]
 
@@ -157,13 +156,12 @@ def ussd_callback(request):
                     is_toxic, _ = check_message_toxicity(maoni)
                     if is_toxic:
                         return HttpResponse(content['rejected'], content_type='text/plain')
-                    ChatMessage.objects.create(bill=bill, user=user, content=f"[USSD] {maoni}")
 
                 with transaction.atomic():
                     vote, created = BillVote.objects.get_or_create(
                         user=user,
                         bill=bill,
-                        defaults={'vote_type': vt}
+                        defaults={'vote_type': vt, 'reason': '' if maoni == "0" else maoni}
                     )
 
                     if not created and vote.vote_type != vt:
@@ -174,8 +172,12 @@ def ussd_callback(request):
                             bill.oppose_count -= 1
                             bill.support_count += 1
                         vote.vote_type = vt
-                        vote.save(update_fields=['vote_type'])
+                        vote.reason = '' if maoni == "0" else maoni
+                        vote.save(update_fields=['vote_type', 'reason'])
                         bill.save(update_fields=['support_count', 'oppose_count'])
+                    elif not created:
+                        vote.reason = '' if maoni == "0" else maoni
+                        vote.save(update_fields=['reason'])
                 response = content['done']
             except Bill.DoesNotExist:
                 response = content['error']

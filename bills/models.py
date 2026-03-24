@@ -14,13 +14,26 @@ class TimeStampedModel(models.Model):
 class BillManager(models.Manager):
     def active_bills(self):
         today = timezone.now().date()
-        return self.get_queryset().filter(status='AC').exclude(closing_date__lt=today)
+        return self.get_queryset().filter(
+            status=Bill.Status.PUBLISHED
+        ).filter(
+            models.Q(closing_date__isnull=True) | models.Q(closing_date__gte=today)
+        )
+
+    def recently_closed_bills(self):
+        today = timezone.now().date()
+        threshold = today - timezone.timedelta(days=30)
+        return self.get_queryset().filter(
+            status=Bill.Status.PUBLISHED,
+            closing_date__lt=today,
+            closing_date__gte=threshold
+        )
 
 class Bill(TimeStampedModel):
     class Status(models.TextChoices):
         DRAFT = 'DR', _('Processing')
-        REVIEW = 'RV', _('Pending Review')
-        ACTIVE = 'AC', _('Active')
+        PENDING_REVIEW = 'RV', _('Pending Review')
+        PUBLISHED = 'AC', _('Published')
         CLOSED = 'CL', _('Closed')
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -57,9 +70,19 @@ class Bill(TimeStampedModel):
 
     @property
     def current_status(self):
-        if self.status == self.Status.ACTIVE and self.closing_date and self.closing_date < timezone.now().date():
+        if self.status == self.Status.PUBLISHED and self.closing_date and timezone.now().date() > self.closing_date:
             return self.Status.CLOSED
         return self.status
+
+    @property
+    def is_closed(self):
+        return self.current_status == self.Status.CLOSED
+
+    @property
+    def is_archived(self):
+        if not self.closing_date:
+            return False
+        return timezone.now().date() > (self.closing_date + timezone.timedelta(days=30))
 
 class ScrapeLog(TimeStampedModel):
     source_name = models.CharField(max_length=100)

@@ -13,13 +13,19 @@
 </style>
 
 <div class="mb-6 flex justify-between items-center">
-    <a href="{% url 'bill_list' %}" class="text-xs font-black text-zinc-500 hover:text-black uppercase tracking-[0.2em] transition flex items-center gap-2">
-        <i class="ph ph-arrow-left"></i> Back
+    <a href="{% url 'bill_list' %}{% if is_closed %}?filter=ongoing{% endif %}" class="text-xs font-black text-zinc-500 hover:text-black uppercase tracking-[0.2em] transition flex items-center gap-2">
+        <i class="ph ph-arrow-left"></i> {% if is_closed %}Back to Active Bills{% else %}Back{% endif %}
     </a>
     <div class="text-[11px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-1">
         <i class="ph ph-eye"></i> {{ bill.view_count }} Views
     </div>
 </div>
+
+{% if is_closed %}
+<div class="mb-6 p-4 rounded-md text-xs font-black uppercase tracking-widest border bg-zinc-100 text-zinc-700 border-zinc-300 text-center">
+    This bill closed on {{ bill.closing_date|date:"M d, Y" }}. Voting is no longer active.
+</div>
+{% endif %}
 
 <div id="alert-container" class="hidden mb-6 p-4 rounded-md text-xs font-black uppercase tracking-widest border z-50 fixed top-6 left-1/2 -translate-x-1/2 bg-white w-11/12 max-w-md text-center"></div>
 

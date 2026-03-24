@@ -31,16 +31,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if not msg_id:
                 return
 
+            message_payload = await self.get_message_payload(msg_id)
+            if not message_payload:
+                return
+
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
                     'type': 'chat_message',
-                    'message_id': msg_id,
-                    'content': data.get('content'),
-                    'sender_alias': data.get('sender_alias'),
-                    'user_id': user.id,
-                    'parent_id': data.get('parent_id'),
-                    'parent_content': data.get('parent_content')
+                    'message_id': message_payload['message_id'],
+                    'content': message_payload['content'],
+                    'sender_alias': message_payload['sender_alias'],
+                    'user_id': message_payload['user_id'],
+                    'parent_id': message_payload['parent_id'],
+                    'parent_content': message_payload['parent_content']
                 }
             )
 
@@ -71,6 +75,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def message_reaction(self, event):
         await self.send(text_data=json.dumps(event))
+
+    @database_sync_to_async
+    def get_message_payload(self, message_id):
+        from chat.models import ChatMessage
+
+        try:
+            message = ChatMessage.objects.select_related('parent_message').get(
+                id=message_id,
+                bill_id=self.bill_id
+            )
+            return {
+                'message_id': message.id,
+                'content': message.content,
+                'sender_alias': message.get_display_alias(),
+                'user_id': message.user_id,
+                'parent_id': message.parent_message_id,
+                'parent_content': message.parent_message.content if message.parent_message else ""
+            }
+        except ChatMessage.DoesNotExist:
+            return None
 
     @database_sync_to_async
     def handle_reaction(self, message_id, reaction_type, user):
