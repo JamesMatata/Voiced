@@ -1,40 +1,36 @@
 from celery import shared_task
 from django.db import transaction
 from .models import Bill, ScrapeLog
-from .services.scraper import ParliamentScraper, MyGovScraper, GazetteScraper
 from .services.ai_engine import BillAnalyzer
-
+from .services.scraper import ParliamentScraper, MyGovScraper, GazetteScraper
 
 @shared_task
 def process_bill_with_ai(bill_id):
-    """Downloads PDF, passes to Gemini, and updates the database record."""
     try:
         bill = Bill.objects.get(id=bill_id)
     except Bill.DoesNotExist:
-        return "Bill not found."
+        return "Not found"
 
     if bill.is_processed_by_ai:
-        return "Already processed."
+        return "Skip"
 
     analyzer = BillAnalyzer()
     pdf_text = analyzer.extract_text_from_pdf(bill.source_url)
 
     if not pdf_text:
-        return "Failed to extract PDF."
+        return "PDF Error"
 
     analysis_data = analyzer.generate_comprehensive_analysis(pdf_text)
     if analysis_data:
         bill.ai_analysis = analysis_data
         bill.is_processed_by_ai = True
-        bill.status = Bill.Status.ACTIVE
+        bill.status = Bill.Status.REVIEW
         bill.save()
-        return f"Processed: {bill.title}"
-    return "AI Analysis failed."
-
+        return f"Awaiting Human Approval: {bill.title}"
+    return "Analysis Failed"
 
 @shared_task
 def run_all_scrapers():
-    """Loops through all sources, deduplicates against DB, and queues AI processing."""
     scrapers = [ParliamentScraper(), MyGovScraper(), GazetteScraper()]
     total_added = 0
 
@@ -53,9 +49,7 @@ def run_all_scrapers():
         added_count = 0
         with transaction.atomic():
             for item in result["data"]:
-                # Deduplication: Check if exact URL or matching Title exists
-                if Bill.objects.filter(source_url=item["source_url"]).exists() or \
-                        Bill.objects.filter(title__icontains=item["title"][:15]).exists():
+                if Bill.objects.filter(source_url=item["source_url"]).exists():
                     continue
 
                 new_bill = Bill.objects.create(
@@ -65,11 +59,8 @@ def run_all_scrapers():
                 )
                 added_count += 1
                 total_added += 1
-
-                # Hand off to AI immediately
                 process_bill_with_ai.delay(new_bill.id)
 
         log.bills_added = added_count
         log.save()
-
-    return f"Scrape complete. {total_added} new bills added."
+    return f"Done: {total_added} bills added"

@@ -28,10 +28,10 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'fallback-secret-key-for-dev')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', 'c2f5-41-89-22-3.ngrok-free.app']
+ALLOWED_HOSTS = ['*', '1256-197-232-165-244.ngrok-free.app']
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://c2f5-41-89-22-3.ngrok-free.app", 'http://127.0.0.1:8000',
+    "https://1256-197-232-165-244.ngrok-free.app", 'http://127.0.0.1:8000',
 ]
 
 

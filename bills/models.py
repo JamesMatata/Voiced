@@ -14,11 +14,12 @@ class TimeStampedModel(models.Model):
 class BillManager(models.Manager):
     def active_bills(self):
         today = timezone.now().date()
-        return self.get_queryset().filter(status=Bill.Status.ACTIVE).exclude(closing_date__lt=today)
+        return self.get_queryset().filter(status='AC').exclude(closing_date__lt=today)
 
 class Bill(TimeStampedModel):
     class Status(models.TextChoices):
-        DRAFT = 'DR', _('Draft / Processing')
+        DRAFT = 'DR', _('Processing')
+        REVIEW = 'RV', _('Pending Review')
         ACTIVE = 'AC', _('Active')
         CLOSED = 'CL', _('Closed')
 
@@ -27,13 +28,10 @@ class Bill(TimeStampedModel):
     title = models.CharField(max_length=500, db_index=True)
     source_url = models.URLField(unique=True)
     document_hash = models.CharField(max_length=64, blank=True)
-
     ai_analysis = models.JSONField(default=dict, blank=True)
     is_processed_by_ai = models.BooleanField(default=False)
     closing_date = models.DateField(null=True, blank=True)
-
     notification_sent = models.BooleanField(default=False, db_index=True)
-
     status = models.CharField(max_length=2, choices=Status.choices, default=Status.DRAFT)
     view_count = models.PositiveIntegerField(default=0)
     support_count = models.PositiveIntegerField(default=0)
@@ -75,11 +73,7 @@ class ScrapeLog(TimeStampedModel):
         return f"{self.source_name} - {self.created_at.strftime('%Y-%m-%d')}"
 
 class BillVote(models.Model):
-    VOTE_CHOICES = [
-        ('support', 'Support'),
-        ('oppose', 'Oppose'),
-    ]
-
+    VOTE_CHOICES = [('support', 'Support'), ('oppose', 'Oppose')]
     bill = models.ForeignKey(Bill, on_delete=models.CASCADE, related_name='votes')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     vote_type = models.CharField(max_length=10, choices=VOTE_CHOICES)
@@ -88,8 +82,6 @@ class BillVote(models.Model):
 
     class Meta:
         unique_together = ('bill', 'user')
-        verbose_name = "Bill Vote"
-        verbose_name_plural = "Bill Votes"
 
     def save(self, *args, **kwargs):
         is_new = self._state.adding
