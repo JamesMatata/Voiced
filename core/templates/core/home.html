@@ -1,59 +1,36 @@
 {% extends 'core/base.html' %}
+{% load i18n %}
 
 {% block content %}
-<div id="toast-container" class="fixed top-24 right-6 z-[99999] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
-    {% if messages %}
-        {% for message in messages %}
-            <div class="toast-message pointer-events-auto bg-zinc-950 text-white border border-zinc-800 p-4 rounded-md shadow-2xl transition-all duration-500 transform translate-x-0 opacity-100 flex items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    {% if message.tags == 'success' %}
-                        <i class="ph-fill ph-check-circle text-green-500 text-xl"></i>
-                    {% elif message.tags == 'error' %}
-                        <i class="ph-fill ph-warning-circle text-red-500 text-xl"></i>
-                    {% else %}
-                        <i class="ph-fill ph-info text-blue-500 text-xl"></i>
-                    {% endif %}
-                    <p class="text-[10px] font-black uppercase tracking-widest leading-tight">
-                        {{ message }}
-                    </p>
-                </div>
-                <button onclick="this.parentElement.remove()" class="text-zinc-500 hover:text-white transition">
-                    <i class="ph ph-x text-lg"></i>
-                </button>
-            </div>
-        {% endfor %}
-    {% endif %}
-</div>
-
 <div class="space-y-16">
     <section class="relative group">
         <div id="carousel" class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-4 pb-4 scroll-smooth">
             <div data-index="0" class="carousel-item snap-center shrink-0 w-full bg-zinc-950 text-white p-8 md:p-16 rounded-md border border-zinc-800 flex flex-col justify-center min-h-[400px]">
-                <h1 class="text-4xl md:text-6xl font-black mb-4 leading-none uppercase italic">The Nation <br> is Talking.</h1>
-                <p class="text-lg text-zinc-400 mb-8 max-w-lg font-medium">Voices are moving the needle. Join the largest community debating Kenyan legislation in Sheng, Swahili, and English.</p>
+                <h1 class="text-4xl md:text-6xl font-black mb-4 leading-none uppercase italic">{% trans "The Nation" %} <br> {% trans "is Talking." %}</h1>
+                <p class="text-lg text-zinc-400 mb-8 max-w-lg font-medium">{% trans "Voices are moving the needle. Join the largest community debating Kenyan legislation in Sheng, Swahili, and English." %}</p>
                 <div class="flex flex-wrap gap-4">
-                    <a href="{% url 'bill_list' %}" class="bg-white text-black px-6 py-3 rounded-md font-bold uppercase tracking-wider text-sm hover:bg-zinc-200 transition">Explore Bills</a>
+                    <a href="{% url 'bill_list' %}" class="bg-white text-black px-6 py-3 rounded-md font-bold uppercase tracking-wider text-sm hover:bg-zinc-200 transition">{% trans "Explore Bills" %}</a>
                     {% if user.is_authenticated %}
-                        <a href="{% url 'discussion_list' %}" class="bg-zinc-800 text-white px-6 py-3 rounded-md font-bold uppercase tracking-wider text-sm border border-zinc-700 hover:bg-zinc-700 transition">Find Discussions</a>
+                        <a href="{% url 'discussion_list' %}" class="bg-zinc-800 text-white px-6 py-3 rounded-md font-bold uppercase tracking-wider text-sm border border-zinc-700 hover:bg-zinc-700 transition">{% trans "Find Discussions" %}</a>
                     {% else %}
-                        <a href="{% url 'register' %}" class="bg-zinc-800 text-white px-6 py-3 rounded-md font-bold uppercase tracking-wider text-sm border border-zinc-700 hover:bg-zinc-700 transition">Join Us</a>
+                        <a href="{% url 'register' %}" class="bg-zinc-800 text-white px-6 py-3 rounded-md font-bold uppercase tracking-wider text-sm border border-zinc-700 hover:bg-zinc-700 transition">{% trans "Join Us" %}</a>
                     {% endif %}
                 </div>
             </div>
 
             <div data-index="1" class="carousel-item snap-center shrink-0 w-full bg-red-600 text-white p-8 md:p-16 rounded-md border border-red-700 flex flex-col justify-center min-h-[400px]">
-                <h1 class="text-4xl md:text-6xl font-black mb-4 leading-none uppercase">No Internet? <br> No Problem.</h1>
-                <p class="text-lg text-red-100 mb-8 max-w-lg font-medium">Access every bill summary and cast your vote via USSD. Empowering the streets with data.</p>
+                <h1 class="text-4xl md:text-6xl font-black mb-4 leading-none uppercase">{% trans "No Internet?" %} <br> {% trans "No Problem." %}</h1>
+                <p class="text-lg text-red-100 mb-8 max-w-lg font-medium">{% trans "Access every bill summary and cast your vote via USSD. Empowering the streets with data." %}</p>
                 <div>
                     <span class="bg-white text-red-600 px-6 py-3 rounded-md font-black tracking-widest text-xl inline-block shadow-sm">*483*XYZ#</span>
                 </div>
             </div>
 
             <div data-index="2" class="carousel-item snap-center shrink-0 w-full bg-green-600 text-white p-8 md:p-16 rounded-md border border-green-700 flex flex-col justify-center min-h-[400px]">
-                <h1 class="text-4xl md:text-6xl font-black mb-4 leading-none uppercase italic">Your Language, <br> Your Voice.</h1>
-                <p class="text-lg text-green-50 mb-8 max-w-lg font-medium">We use AI to translate complex laws into Sheng and Swahili instantly. Making public participation a reality for every Mwananchi.</p>
+                <h1 class="text-4xl md:text-6xl font-black mb-4 leading-none uppercase italic">{% trans "Your Language," %} <br> {% trans "Your Voice." %}</h1>
+                <p class="text-lg text-green-50 mb-8 max-w-lg font-medium">{% trans "We use AI to translate complex laws into Sheng and Swahili instantly. Making public participation a reality for every Mwananchi." %}</p>
                 <div>
-                    <a href="{% url 'bill_list' %}" class="bg-white text-green-700 px-6 py-3 rounded-md font-bold uppercase tracking-wider text-sm hover:bg-green-50 transition shadow-sm">View Bills →</a>
+                    <a href="{% url 'bill_list' %}" class="bg-white text-green-700 px-6 py-3 rounded-md font-bold uppercase tracking-wider text-sm hover:bg-green-50 transition shadow-sm">{% trans "View Bills" %} →</a>
                 </div>
             </div>
         </div>
@@ -67,8 +44,8 @@
 
     <section>
         <div class="flex items-center justify-between mb-6 border-b border-zinc-200 pb-2">
-            <h2 class="text-2xl font-black uppercase tracking-tighter">Trending Bills</h2>
-            <a href="{% url 'bill_list' %}" class="text-xs font-bold text-zinc-500 hover:text-black uppercase tracking-widest">View All Bills</a>
+            <h2 class="text-2xl font-black uppercase tracking-tighter">{% trans "Trending Bills" %}</h2>
+            <a href="{% url 'bill_list' %}" class="text-xs font-bold text-zinc-500 hover:text-black uppercase tracking-widest">{% trans "View All Bills" %}</a>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -81,15 +58,15 @@
 
                     <div class="mt-auto pt-6 border-t border-zinc-100">
                         <div class="flex justify-between items-center mb-4">
-                            <span class="text-xs font-black text-green-700 uppercase">↑ {{ bill.support_count }} Support</span>
-                            <span class="text-xs font-black text-red-600 uppercase">↓ {{ bill.oppose_count }} Oppose</span>
+                            <span class="text-xs font-black text-green-700 uppercase">↑ {{ bill.support_count }} {% trans "Support" %}</span>
+                            <span class="text-xs font-black text-red-600 uppercase">↓ {{ bill.oppose_count }} {% trans "Oppose" %}</span>
                         </div>
                         {% if user.is_authenticated %}
-                            <a href="{% url 'bill_detail' bill.id %}" class="block w-full text-center bg-zinc-950 text-white text-xs font-black py-3 rounded-md uppercase tracking-widest hover:bg-black transition">Cast Vote</a>
+                            <a href="{% url 'bill_detail' bill.id %}" class="block w-full text-center bg-zinc-950 text-white text-xs font-black py-3 rounded-md uppercase tracking-widest hover:bg-black transition">{% trans "Cast Vote" %}</a>
                         {% else %}
                             <div class="bg-zinc-50 border border-dashed border-zinc-300 rounded-md p-3 text-center">
                                 <a href="{% url 'login' %}?next={{ request.path }}" class="text-[10px] font-black text-zinc-600 uppercase tracking-widest flex items-center justify-center gap-2">
-                                    <i class="ph ph-lock-key"></i> Sign in to vote
+                                    <i class="ph ph-lock-key"></i> {% trans "Sign in to vote" %}
                                 </a>
                             </div>
                         {% endif %}
@@ -98,7 +75,7 @@
             {% empty %}
                 <div class="col-span-1 md:col-span-3 py-16 border border-dashed border-zinc-300 rounded-md flex flex-col items-center justify-center text-zinc-400">
                     <i class="ph ph-file-x text-5xl mb-4"></i>
-                    <p class="font-bold uppercase tracking-widest text-sm">No Active Bills Found</p>
+                    <p class="font-bold uppercase tracking-widest text-sm">{% trans "No Active Bills Found" %}</p>
                 </div>
             {% endfor %}
         </div>
@@ -106,19 +83,19 @@
 
     <section class="bg-green-600 rounded-md p-8 md:p-12 text-white flex flex-col lg:flex-row items-center justify-between gap-8 border border-green-700">
         <div class="max-w-xl text-center lg:text-left">
-            <h2 class="text-3xl md:text-4xl font-black uppercase leading-none mb-4">Voiced on the Go</h2>
-            <p class="font-medium text-green-50 text-lg">We've partnered with major telcos to ensure you don't need a smartphone to be a part of the democracy. Use our USSD service for free.</p>
+            <h2 class="text-3xl md:text-4xl font-black uppercase leading-none mb-4">{% trans "Voiced on the Go" %}</h2>
+            <p class="font-medium text-green-50 text-lg">{% trans "We've partnered with major telcos to ensure you don't need a smartphone to be a part of the democracy. Use our USSD service for free." %}</p>
         </div>
         <div class="bg-zinc-950 p-6 rounded-md border-2 border-zinc-800 text-center w-full lg:w-auto max-w-xs sm:max-w-md lg:max-w-none">
-            <p class="text-[10px] font-bold text-green-500 uppercase tracking-widest mb-2">Dial Now</p>
+            <p class="text-[10px] font-bold text-green-500 uppercase tracking-widest mb-2">{% trans "Dial Now" %}</p>
             <span class="text-2xl sm:text-3xl font-black tracking-widest block break-words">*483*XYZ#</span>
         </div>
     </section>
 
     <section>
         <div class="flex items-center justify-between mb-6 border-b border-zinc-200 pb-2">
-            <h2 class="text-2xl font-black uppercase tracking-tighter">Live Discussions</h2>
-            <a href="{% url 'discussion_list' %}" class="text-xs font-bold text-zinc-500 hover:text-black uppercase tracking-widest">Join Debates</a>
+            <h2 class="text-2xl font-black uppercase tracking-tighter">{% trans "Live Discussions" %}</h2>
+            <a href="{% url 'discussion_list' %}" class="text-xs font-bold text-zinc-500 hover:text-black uppercase tracking-widest">{% trans "Join Debates" %}</a>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -126,19 +103,19 @@
                 <div class="bg-white border border-zinc-300 p-6 rounded-md hover:border-black transition flex flex-col h-full">
                     <div class="flex items-center gap-2 mb-4">
                         <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
-                        <span class="text-[10px] font-black text-red-600 uppercase tracking-widest">Live Now</span>
+                        <span class="text-[10px] font-black text-red-600 uppercase tracking-widest">{% trans "Live Now" %}</span>
                     </div>
                     <h3 class="font-black text-lg text-zinc-900 leading-tight mb-4 line-clamp-2">{{ bill.title }}</h3>
 
                     <div class="mt-auto pt-4">
                         {% if user.is_authenticated %}
                             <a href="{% url 'bill_chat' bill.id %}" class="flex items-center justify-center gap-2 w-full bg-zinc-100 text-zinc-900 text-xs font-black py-3 rounded-md border border-zinc-300 uppercase tracking-widest hover:bg-zinc-200 transition">
-                                <i class="ph ph-chats"></i> Join Chat
+                                <i class="ph ph-chats"></i> {% trans "Join Chat" %}
                             </a>
                         {% else %}
                             <div class="bg-zinc-50 border border-dashed border-zinc-300 rounded-md p-3 text-center">
                                 <a href="{% url 'login' %}?next={{ request.path }}" class="text-[10px] font-black text-zinc-600 uppercase tracking-widest flex items-center justify-center gap-2">
-                                    <i class="ph ph-lock-key"></i> Sign in to join chat
+                                    <i class="ph ph-lock-key"></i> {% trans "Sign in to join chat" %}
                                 </a>
                             </div>
                         {% endif %}
@@ -147,7 +124,7 @@
             {% empty %}
                 <div class="col-span-1 md:col-span-3 py-16 border border-dashed border-zinc-300 rounded-md flex flex-col items-center justify-center text-zinc-400">
                     <i class="ph ph-chats-circle text-5xl mb-4"></i>
-                    <p class="font-bold uppercase tracking-widest text-sm">No Live Discussions</p>
+                    <p class="font-bold uppercase tracking-widest text-sm">{% trans "No Live Discussions" %}</p>
                 </div>
             {% endfor %}
         </div>
@@ -157,19 +134,10 @@
 <style>
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-    .toast-message.fade-out { opacity: 0; transform: translateX(30px); }
 </style>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const toasts = document.querySelectorAll('.toast-message');
-        toasts.forEach(t => {
-            setTimeout(() => {
-                t.classList.add('fade-out');
-                setTimeout(() => t.remove(), 500);
-            }, 4500);
-        });
-
         const carousel = document.getElementById('carousel');
         const items = Array.from(carousel.querySelectorAll('.carousel-item'));
 

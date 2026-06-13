@@ -1,17 +1,36 @@
 from django.urls import path
-from .views import HomeView, BillListView, BillDetailView, DiscussionListView, AboutView, PrivacyView, TermsView, generate_bill_pdf, generate_write_up, bill_vote_counts, download_report, national_pulse_status
+from .views import (
+    HomeView,
+    BillListView,
+    BillDetailView,
+    DiscussionListView,
+    AboutView,
+    PrivacyView,
+    TermsView,
+    bill_vote_counts,
+    national_pulse_status,
+    bill_ledger_view,
+    bill_ledger_csv_export,
+    bill_ledger_verify_page,
+    bill_ledger_lookup_json,
+    bill_baraza_poster_pdf,
+    bill_baraza_poster_png,
+)
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),
     path('bills/', BillListView.as_view(), name='bill_list'),
     path('bills/<uuid:pk>/', BillDetailView.as_view(), name='bill_detail'),
+    path('ledger/<uuid:bill_id>/', bill_ledger_view, name='bill_ledger'),
+    path('ledger/<uuid:bill_id>/audit.csv', bill_ledger_csv_export, name='bill_ledger_csv'),
+    path('ledger/<uuid:bill_id>/verify/', bill_ledger_verify_page, name='bill_ledger_verify'),
+    path('ledger/<uuid:bill_id>/lookup/', bill_ledger_lookup_json, name='bill_ledger_lookup'),
+    path('bills/<uuid:bill_id>/baraza-poster.pdf', bill_baraza_poster_pdf, name='bill_baraza_poster_pdf'),
+    path('bills/<uuid:bill_id>/baraza-poster.png', bill_baraza_poster_png, name='bill_baraza_poster_png'),
     path('bills/<uuid:pk>/vote-counts/', bill_vote_counts, name='bill_vote_counts'),
-    path('bills/<uuid:bill_id>/download-report/', download_report, name='download_report'),
     path('bills/<uuid:bill_id>/pulse-status/', national_pulse_status, name='national_pulse_status'),
     path('discussions/', DiscussionListView.as_view(), name='discussion_list'),
     path('about/', AboutView.as_view(), name='about'),
     path('privacy/', PrivacyView.as_view(), name='privacy'),
     path('terms/', TermsView.as_view(), name='terms'),
-    path('bill/<uuid:bill_id>/report/', generate_bill_pdf, name='bill_report_pdf'),
-    path('bill/<uuid:bill_id>/write-up/', generate_write_up, name='generate_write_up'),
 ]

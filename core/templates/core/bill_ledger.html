@@ -1,0 +1,62 @@
+{% extends 'core/base.html' %}
+{% block title %}Public Ledger | {{ bill.title }}{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Public Ledger</p>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">{{ bill.title }}</h1>
+            <p class="text-xs text-zinc-500 font-medium mt-1">Anonymized verified and pulse vote receipts.</p>
+        </div>
+        <a href="{% url 'bill_ledger_csv' bill.id %}" class="inline-flex items-center justify-center min-h-[42px] px-4 rounded-md bg-zinc-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-black">
+            Download Audit CSV
+        </a>
+    </div>
+
+    <form method="get" class="flex gap-2">
+        <input type="text" name="q" value="{{ search_query }}" placeholder="Paste your full receipt ID" class="flex-1 border border-zinc-300 rounded-md px-3 py-2.5 text-sm font-medium">
+        <button type="submit" class="px-4 rounded-md border border-zinc-900 text-zinc-900 text-[10px] font-black uppercase tracking-widest">Search</button>
+    </form>
+
+    <div class="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-zinc-50 border-b border-zinc-200">
+                    <tr>
+                        <th class="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">Receipt ID</th>
+                        <th class="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">Vote</th>
+                        <th class="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">Timestamp</th>
+                        <th class="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">Verification</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in page_obj %}
+                    <tr class="border-b border-zinc-100 last:border-0">
+                        <td class="px-4 py-3 font-mono text-xs">{{ row.receipt_id|slice:":4" }}...{{ row.receipt_id|slice:"-4:" }}</td>
+                        <td class="px-4 py-3 font-bold">{{ row.vote_type|title }}</td>
+                        <td class="px-4 py-3 text-xs text-zinc-600">{{ row.created_at|date:"Y-m-d H:i:s" }}</td>
+                        <td class="px-4 py-3 text-xs font-bold {% if row.verification_status == 'Verified Citizen' %}text-emerald-700{% else %}text-zinc-700{% endif %}">{{ row.verification_status }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-4 py-6 text-center text-sm text-zinc-500">No matching receipts found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="flex justify-between items-center text-xs font-bold text-zinc-600">
+        {% if page_obj.has_previous %}
+        <a href="?q={{ search_query }}&page={{ page_obj.previous_page_number }}" class="underline">Previous</a>
+        {% else %}<span></span>{% endif %}
+        <span>Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?q={{ search_query }}&page={{ page_obj.next_page_number }}" class="underline">Next</a>
+        {% else %}<span></span>{% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

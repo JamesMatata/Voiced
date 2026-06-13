@@ -35,7 +35,7 @@ def send_live_notification(user, title, message, link, n_type='BILL'):
     )
 
     # 3. Send the Email
-    site_url = getattr(settings, 'SITE_URL', 'http://127.0.0.1:8000')
+    site_url = getattr(settings, 'BASE_URL', 'http://127.0.0.1:8000')
     full_link = f"{site_url}{link}"
 
     send_mail(

@@ -1,17 +1,18 @@
 {% extends 'core/base.html' %}
+{% load i18n %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto space-y-10">
     <div class="flex flex-col sm:flex-row sm:items-end justify-between border-b border-zinc-200 pb-8 gap-6">
         <div class="max-w-xl">
-            <h1 class="text-3xl md:text-4xl font-black uppercase tracking-tighter">Your Alerts</h1>
-            <p class="text-zinc-500 font-medium mt-2 italic text-sm md:text-base">Stay updated on legislative shifts and community activity.</p>
+            <h1 class="text-3xl md:text-4xl font-black uppercase tracking-tighter">{% trans "Your Alerts" %}</h1>
+            <p class="text-zinc-500 font-medium mt-2 italic text-sm md:text-base">{% trans "Stay updated on legislative shifts and community activity." %}</p>
         </div>
 
         <div id="header-actions" class="{% if not notifications %}hidden{% endif %} flex items-center">
             <button onclick="markAllRead()"
                     class="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-all border border-zinc-200 sm:border-none px-4 py-2 sm:p-0 rounded-md sm:rounded-none bg-zinc-50 sm:bg-transparent">
-                Mark All as Read
+                {% trans "Mark All as Read" %}
             </button>
         </div>
     </div>
@@ -20,7 +21,7 @@
         {% for n in notifications %}
             <div id="notification-{{ n.id }}"
                  class="notification-item group relative bg-white border {% if not n.is_read %}border-zinc-900 shadow-sm{% else %}border-zinc-200{% endif %} p-6 rounded-md transition-all cursor-pointer hover:bg-zinc-50/50"
-                 onclick="openNotificationModal({{ n.id }}, '{{ n.title|escapejs }}', '{{ n.message|escapejs }}', '{{ n.link|escapejs }}', '{{ n.get_notification_type_display }}', '{{ n.created_at|timesince }} ago')">
+                 onclick="openNotificationModal({{ n.id }}, '{{ n.title|escapejs }}', '{{ n.message|escapejs }}', '{{ n.link|escapejs }}', '{{ n.get_notification_type_display }}', '{{ n.created_at|timesince }} {% trans "ago" %}')">
 
                 <div class="flex items-start gap-6">
                     <div class="icon-box w-12 h-12 {% if not n.is_read %}bg-red-600 text-white{% else %}bg-zinc-100 text-zinc-400{% endif %} rounded-md flex items-center justify-center shrink-0 transition-colors">
@@ -50,7 +51,7 @@
         {% empty %}
             <div id="empty-state" class="py-24 border-2 border-dashed border-zinc-200 rounded-md flex flex-col items-center justify-center text-zinc-400">
                 <i class="ph ph-bell-slash text-7xl mb-4 opacity-10"></i>
-                <p class="font-black uppercase tracking-[0.2em] text-sm text-zinc-500">Silence is Golden</p>
+                <p class="font-black uppercase tracking-[0.2em] text-sm text-zinc-500">{% trans "Silence is Golden" %}</p>
             </div>
         {% endfor %}
     </div>
@@ -71,8 +72,8 @@
             <p id="modalMessage" class="text-zinc-600 text-sm leading-relaxed font-medium"></p>
 
             <div class="pt-6 flex gap-4">
-                <a id="modalLink" href="#" class="flex-grow text-center bg-zinc-900 text-white text-[10px] font-black uppercase py-4 rounded hover:bg-black transition tracking-widest">Go to Page →</a>
-                <button onclick="closeModal()" class="px-6 border-2 border-zinc-200 text-zinc-400 text-[10px] font-black uppercase rounded hover:border-zinc-900 hover:text-zinc-900 transition tracking-widest">Close</button>
+                <a id="modalLink" href="#" class="flex-grow text-center bg-zinc-900 text-white text-[10px] font-black uppercase py-4 rounded hover:bg-black transition tracking-widest">{% trans "Go to Page" %} →</a>
+                <button onclick="closeModal()" class="px-6 border-2 border-zinc-200 text-zinc-400 text-[10px] font-black uppercase rounded hover:border-zinc-900 hover:text-zinc-900 transition tracking-widest">{% trans "Close" %}</button>
             </div>
         </div>
     </div>

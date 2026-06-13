@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 from bills.models import Bill
-from .utils import generate_random_alias
 
 
 class ChatMessageAlias(models.Model):
@@ -32,26 +31,15 @@ class ChatMessage(models.Model):
         verbose_name_plural = "Chat Messages"
 
     def get_display_alias(self):
-        if self.author_alias and self.author_alias != "Citizen":
-            return self.author_alias
-        alias_obj = ChatMessageAlias.objects.filter(user=self.user, bill=self.bill).first()
-        if alias_obj and alias_obj.alias_name:
-            return alias_obj.alias_name
-        return "Citizen"
+        profile = getattr(self.user, "profile", None)
+        if profile and profile.use_alias:
+            return "User"
+        return self.user.username
 
     def save(self, *args, **kwargs):
-        # Ensure every message gets the per-bill ghost alias, even when
-        # author_alias is prefilled by default ("Citizen").
-        if self._state.adding or not self.author_alias or self.author_alias == "Citizen":
-            alias_obj, _ = ChatMessageAlias.objects.get_or_create(
-                user=self.user,
-                bill=self.bill,
-                defaults={'alias_name': generate_random_alias()}
-            )
-            if not alias_obj.alias_name:
-                alias_obj.alias_name = generate_random_alias()
-                alias_obj.save(update_fields=['alias_name'])
-            self.author_alias = alias_obj.alias_name or "Citizen"
+        profile = getattr(self.user, "profile", None)
+        use_alias = bool(profile and profile.use_alias)
+        self.author_alias = "User" if use_alias else self.user.username
         super().save(*args, **kwargs)
 
     def __str__(self):

@@ -1,0 +1,79 @@
+{% extends 'core/base.html' %}
+{% block title %}Verify Receipt | {{ bill.title }}{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    <div class="space-y-2">
+        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Vote Receipt Verification</p>
+        <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">{{ bill.title }}</h1>
+        <p class="text-sm text-zinc-600 font-medium">Paste your full private receipt ID to confirm your vote appears in the public ledger.</p>
+    </div>
+
+    <div class="rounded-xl border border-zinc-200 bg-white p-4 sm:p-5 space-y-3">
+        <label class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Receipt ID</label>
+        <div class="flex gap-2">
+            <input id="receipt-input" type="text" value="{{ prefill_receipt }}" placeholder="Paste full SHA-256 receipt..." class="flex-1 border border-zinc-300 rounded-md px-3 py-2.5 text-sm font-mono">
+            <button id="receipt-check-btn" type="button" onclick="checkReceiptNow()" class="min-h-[42px] px-4 rounded-md bg-zinc-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-black">Check</button>
+        </div>
+        <p id="receipt-hint" class="text-[11px] text-zinc-500 font-medium">No personal identity is exposed on this page.</p>
+    </div>
+
+    <div id="receipt-result" class="hidden rounded-xl border border-zinc-200 bg-white p-4 sm:p-5"></div>
+
+    <div class="flex gap-2">
+        <a href="{% url 'bill_ledger' bill.id %}" class="inline-flex items-center min-h-[40px] px-3 rounded-md border border-zinc-300 text-zinc-700 text-[10px] font-black uppercase tracking-widest hover:bg-zinc-50">Open Full Ledger</a>
+        <a href="{% url 'bill_detail' bill.id %}" class="inline-flex items-center min-h-[40px] px-3 rounded-md border border-zinc-300 text-zinc-700 text-[10px] font-black uppercase tracking-widest hover:bg-zinc-50">Back to Bill</a>
+    </div>
+</div>
+
+<script>
+const lookupUrl = "{% url 'bill_ledger_lookup' bill.id %}";
+function renderReceiptResult(payload) {
+    const box = document.getElementById('receipt-result');
+    if (!box) return;
+    if (!payload.found) {
+        box.classList.remove('hidden');
+        box.innerHTML = '<p class="text-sm font-bold text-amber-900">No matching receipt found for this bill.</p><p class="text-xs text-zinc-600 mt-1">Check for typos or ensure you used the full receipt ID.</p>';
+        return;
+    }
+    box.classList.remove('hidden');
+    box.innerHTML = `
+        <p class="text-[10px] font-black uppercase tracking-widest text-emerald-700">Receipt Verified</p>
+        <div class="mt-2 space-y-1 text-sm text-zinc-700">
+            <p><span class="font-black">Receipt:</span> <span class="font-mono">${payload.receipt_short}</span></p>
+            <p><span class="font-black">Direction:</span> ${payload.vote_direction}</p>
+            <p><span class="font-black">Timestamp:</span> ${payload.timestamp}</p>
+            <p><span class="font-black">Status:</span> ${payload.verification_status}</p>
+        </div>
+        <a href="${payload.ledger_url}" class="inline-flex mt-3 text-[10px] font-black uppercase tracking-widest underline">View in full ledger</a>
+    `;
+}
+
+async function checkReceiptNow() {
+    const input = document.getElementById('receipt-input');
+    const btn = document.getElementById('receipt-check-btn');
+    if (!input || !btn) return;
+    const q = (input.value || '').trim();
+    if (!q) return;
+    btn.disabled = true;
+    try {
+        const r = await fetch(lookupUrl + '?q=' + encodeURIComponent(q), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+        });
+        const d = await r.json();
+        if (!r.ok || !d.ok) {
+            renderReceiptResult({ found: false });
+            return;
+        }
+        renderReceiptResult(d);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const initial = (document.getElementById('receipt-input')?.value || '').trim();
+    if (initial) checkReceiptNow();
+});
+</script>
+{% endblock %}

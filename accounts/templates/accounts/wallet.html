@@ -1,0 +1,463 @@
+{% extends 'core/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Wallet" %} | Voiced{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
+
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-zinc-200 pb-6">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-black uppercase tracking-tighter text-zinc-900">{% trans "Wallet" %}</h1>
+            <p class="text-sm text-zinc-600 font-medium mt-1.5">{% trans "Balance, top-ups, and spending updated live." %}</p>
+        </div>
+        <a href="{% url 'profile' %}" class="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-zinc-900 shrink-0">{% trans "Profile" %}</a>
+    </div>
+
+    <section class="rounded-2xl border border-zinc-200 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 text-white p-6 sm:p-8 shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-40 h-40 bg-red-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500 mb-2">{% trans "Available balance" %}</p>
+                    <p id="wallet-available-main" class="text-4xl sm:text-5xl font-black tracking-tight tabular-nums">KES {{ wallet.available_balance|floatformat:2 }}</p>
+                </div>
+                <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-zinc-400">
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span> {% trans "Live" %}
+                </span>
+            </div>
+            <p id="wallet-meta-line" class="text-xs text-zinc-500 mt-4 font-medium tabular-nums">
+                {% trans "Total" %} <span id="wallet-balance-total">KES {{ wallet.balance|floatformat:2 }}</span>
+                <span class="text-zinc-600 mx-1">·</span>
+                {% trans "Reserved" %} <span id="wallet-balance-reserved">KES {{ wallet.reserved_balance|floatformat:2 }}</span>
+            </p>
+            <div class="mt-6">
+                <button type="button" onclick="openWalletTopupModal()" class="inline-flex items-center justify-center min-h-[44px] px-5 rounded-lg bg-white text-zinc-950 text-[11px] font-black uppercase tracking-widest whitespace-nowrap shadow-sm hover:bg-zinc-100 transition">
+                    {% trans "Top up" %}
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2 class="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-4">{% trans "Activity" %}</h2>
+        <div class="space-y-3">
+            {% for tx in transactions %}
+            <article class="rounded-xl border border-zinc-200 bg-white p-4 sm:p-5 shadow-sm hover:border-zinc-300 transition-colors">
+                <div class="flex flex-col gap-2">
+                    <p class="text-sm sm:text-base font-bold text-zinc-900 leading-snug">
+                        {% if tx.transaction_type == 'TP' %}
+                            Topped up KES {{ tx.amount|floatformat:2 }} on {{ tx.created_at|date:"F j" }}
+                        {% elif tx.transaction_type == 'RF' %}
+                            Refunded to wallet · KES {{ tx.amount|floatformat:2 }}
+                        {% elif tx.service_type == 'DR' and tx.bill %}
+                            AI Legal Draft: {{ tx.bill.title }}
+                        {% elif tx.service_type == 'RP' and tx.bill %}
+                            Report &amp; analysis: {{ tx.bill.title }}
+                        {% elif tx.bill %}
+                            Purchase · {{ tx.bill.title }}
+                        {% else %}
+                            {{ tx.description|default:"Transaction" }}
+                        {% endif %}
+                    </p>
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-500 font-medium">
+                        <time datetime="{{ tx.created_at|date:'c' }}">{{ tx.created_at|date:"M j, Y · H:i" }}</time>
+                        {% if tx.transaction_type == 'TP' or tx.transaction_type == 'RF' %}
+                        <span class="text-zinc-300">·</span>
+                        <span class="font-black text-emerald-700 tabular-nums">+KES {{ tx.amount|floatformat:2 }}</span>
+                        {% else %}
+                        <span class="text-zinc-300">·</span>
+                        <span class="font-black text-zinc-700 tabular-nums">−KES {{ tx.amount|floatformat:2 }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 mt-1">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide
+                            {% if tx.status == 'CO' %}bg-emerald-50 text-emerald-800 border border-emerald-200
+                            {% elif tx.status == 'PE' %}bg-amber-50 text-amber-800 border border-amber-200
+                            {% else %}bg-red-50 text-red-800 border border-red-200{% endif %}">
+                            {{ tx.get_status_display }}
+                        </span>
+                        {% if tx.mpesa_receipt_number %}
+                        <span class="text-[10px] font-mono text-zinc-400 truncate max-w-full" title="{{ tx.mpesa_receipt_number }}">M-Pesa {{ tx.mpesa_receipt_number }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+            {% empty %}
+            <div class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50/80 px-6 py-12 text-center">
+                <i class="ph ph-receipt text-3xl text-zinc-300 mb-3 block"></i>
+                <p class="text-sm font-bold text-zinc-600">{% trans "No activity yet" %}</p>
+                <p class="text-xs text-zinc-500 mt-1">{% trans "Top up to get started." %}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<div id="walletTopupModal" class="hidden fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4 pb-6 bg-black/50 backdrop-blur-sm" data-processing="" onclick="if (event.target === this) { if (walletTopupState.waiting) return; closeWalletTopupModalIfIdle(); }">
+    <div class="bg-white rounded-xl border border-zinc-200 w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl relative" role="dialog" aria-modal="true" aria-labelledby="walletTopupTitle" onclick="event.stopPropagation();">
+        <header class="flex-shrink-0 flex items-start justify-between gap-3 px-5 pt-5 pb-3 border-b border-zinc-100">
+            <div class="min-w-0 flex-1">
+                <h2 id="walletTopupTitle" class="text-base font-black uppercase tracking-tight text-zinc-900">Top up with M-Pesa</h2>
+                <p class="text-xs text-zinc-500 font-medium mt-1 leading-snug">Safaricom will send an STK Push. Your balance updates automatically after you enter your PIN.</p>
+            </div>
+            <button type="button" id="walletTopupCloseBtn" onclick="closeWalletTopupModalIfIdle()" class="shrink-0 text-zinc-400 hover:text-zinc-900 p-2 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-zinc-300 disabled:pointer-events-none disabled:opacity-40" aria-label="Close">
+                <i class="ph ph-x text-xl"></i>
+            </button>
+        </header>
+        <div class="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4">
+            <div id="wallet-topup-step-form">
+                <div id="wallet-topup-error" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-800"></div>
+                <form
+                    id="wallet-topup-form"
+                    hx-post="{% url 'wallet' %}"
+                    hx-target="#wallet-topup-feedback"
+                    hx-swap="innerHTML"
+                    hx-indicator="#wallet-topup-btn"
+                    class="space-y-4"
+                >
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="topup">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] font-black uppercase text-zinc-500">Amount (KES)</label>
+                        <input type="number" name="amount" min="1" max="150000" step="1" value="100" required
+                               class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 min-h-[44px] text-sm font-medium focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900">
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] font-black uppercase text-zinc-500">M-Pesa phone</label>
+                        <input type="tel" name="phone" placeholder="254712345678" required autocomplete="tel"
+                               class="w-full border border-zinc-200 rounded-lg px-3 py-2.5 min-h-[44px] text-sm font-medium focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900">
+                    </div>
+                    <button type="submit" id="wallet-topup-btn" class="w-full inline-flex items-center justify-center min-h-[48px] px-5 rounded-lg bg-zinc-900 text-white text-[11px] font-black uppercase tracking-widest whitespace-nowrap hover:bg-black transition htmx-request:opacity-70 htmx-request:pointer-events-none">
+                        Send STK Push
+                    </button>
+                </form>
+                <div id="wallet-topup-feedback" class="text-xs font-medium min-h-[1rem]"></div>
+            </div>
+
+            <div id="wallet-topup-step-waiting" class="hidden rounded-lg border border-zinc-200 bg-zinc-50/90 px-4 py-3 space-y-2">
+                <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-700">
+                    <i class="ph ph-spinner animate-spin"></i>
+                    Waiting for M-Pesa confirmation...
+                </div>
+                <p class="text-[11px] text-zinc-600 font-medium leading-relaxed">
+                    Complete or dismiss the prompt on your phone. This dialog stays open until we know the result—your balance updates automatically.
+                </p>
+                <p class="text-[10px] text-zinc-500 font-medium leading-relaxed">You cannot close this dialog while we are waiting for M-Pesa.</p>
+                <button type="button" id="wallet-mpesa-check-status" onclick="walletTopupCheckStatusNow()"
+                        class="mt-1 w-full min-h-[40px] rounded-lg border border-zinc-300 bg-white px-3 text-[10px] font-black uppercase tracking-widest text-zinc-800 hover:bg-zinc-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    Still waiting? Check status now
+                </button>
+            </div>
+
+            <div id="wallet-topup-step-success" class="hidden rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 space-y-2">
+                <div class="flex items-center gap-2 text-emerald-800 font-black text-[10px] uppercase tracking-widest">
+                    <i class="ph ph-check-circle text-base"></i>
+                    Top-up completed
+                </div>
+                <p class="text-[11px] text-emerald-800 font-medium leading-relaxed">
+                    Your wallet balance has been updated successfully.
+                </p>
+                <button type="button" onclick="closeWalletTopupModalIfIdle()" class="w-full min-h-[44px] px-4 rounded-lg bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition">
+                    Close
+                </button>
+            </div>
+        </div>
+
+        <footer class="flex-shrink-0 border-t border-zinc-100 px-5 py-3 bg-zinc-50/90">
+            <p class="text-[10px] text-zinc-500 text-center font-medium">Charges may apply per your Safaricom tariff.</p>
+        </footer>
+    </div>
+</div>
+
+<script>
+(function() {
+    const jsonUrl = "{% url 'wallet_balance' %}";
+    const mpesaTopupStatusUrl = "{% url 'mpesa_topup_status' %}";
+    let pollId = null;
+    let walletTopupPollBusy = false;
+    let walletTopupState = {
+        waiting: false,
+        transactionId: null,
+        startedAt: null,
+        startAvailable: 0,
+        requestedAmount: 0,
+        maxWaitMs: 300000, // 5 minutes — allows slower Safaricom callbacks / PIN entry
+    };
+
+    function parseAvailableFromDOM() {
+        const el = document.getElementById("wallet-available-main");
+        if (!el) return 0;
+        const raw = String(el.textContent || "").replace("KES", "").trim();
+        const n = parseFloat(raw);
+        return isNaN(n) ? 0 : n;
+    }
+
+    function setWalletTopupStep(step) {
+        document.getElementById("wallet-topup-step-form")?.classList.toggle("hidden", step !== "form");
+        document.getElementById("wallet-topup-step-waiting")?.classList.toggle("hidden", step !== "waiting");
+        document.getElementById("wallet-topup-step-success")?.classList.toggle("hidden", step !== "success");
+    }
+
+    function parseMoney(el, prefix, val) {
+        if (!el) return;
+        const n = parseFloat(val);
+        if (isNaN(n)) return;
+        el.textContent = prefix + n.toFixed(2);
+    }
+
+    document.body.addEventListener("htmx:beforeSwap", function(evt) {
+        const xhr = evt.detail.xhr;
+        const tgt = evt.detail.target;
+        if (!xhr || !tgt || tgt.id !== "wallet-topup-feedback") return;
+        if (xhr.status === 422) {
+            evt.detail.shouldSwap = true;
+            evt.detail.isError = false;
+        }
+    });
+
+    window.voicedFetchWalletDashboard = async function() {
+        try {
+            const r = await fetch(jsonUrl, { headers: { "X-Requested-With": "XMLHttpRequest" }, credentials: "same-origin" });
+            if (!r.ok) return;
+            const d = await r.json();
+            const main = document.getElementById("wallet-available-main");
+            if (main) main.textContent = "KES " + parseFloat(d.available).toFixed(2);
+            parseMoney(document.getElementById("wallet-balance-total"), "KES ", d.balance);
+            parseMoney(document.getElementById("wallet-balance-reserved"), "KES ", d.reserved);
+            if (window.voicedUpdateWalletNav) window.voicedUpdateWalletNav(d.available);
+        } catch (e) { /* ignore */ }
+    };
+
+    window.openWalletTopupModal = function() {
+        const m = document.getElementById("walletTopupModal");
+        if (m) {
+            m.classList.remove("hidden");
+            if (pollId) {
+                clearInterval(pollId);
+                pollId = null;
+            }
+            walletTopupState.waiting = false;
+            walletTopupState.transactionId = null;
+            walletTopupState.startedAt = null;
+            walletTopupState.startAvailable = 0;
+            walletTopupState.requestedAmount = 0;
+
+            setWalletTopupStep("form");
+            document.getElementById("wallet-topup-error")?.classList.add("hidden");
+            const feedback = document.getElementById("wallet-topup-feedback");
+            if (feedback) feedback.innerHTML = "";
+
+            const c = document.getElementById("walletTopupCloseBtn");
+            if (c) {
+                c.classList.remove("opacity-40", "pointer-events-none");
+                c.disabled = false;
+            }
+        }
+    };
+
+    window.closeWalletTopupModal = function() {
+        const m = document.getElementById("walletTopupModal");
+        if (m) m.classList.add("hidden");
+    };
+
+    window.closeWalletTopupModalIfIdle = function() {
+        const m = document.getElementById("walletTopupModal");
+        if (m && m.getAttribute("data-processing")) return;
+        if (walletTopupState.waiting) return;
+        closeWalletTopupModal();
+    };
+
+    function walletTopupFormFrom(evt) {
+        const el = evt.detail.elt;
+        if (!el) return null;
+        return el.id === "wallet-topup-form" ? el : el.closest && el.closest("#wallet-topup-form");
+    }
+
+    function walletStopTopupPoll() {
+        if (pollId) {
+            clearInterval(pollId);
+            pollId = null;
+        }
+    }
+
+    async function walletTopupPollTick() {
+        if (!walletTopupState.waiting) return;
+        if (walletTopupPollBusy) return;
+        walletTopupPollBusy = true;
+        const closeBtn = document.getElementById("walletTopupCloseBtn");
+        try {
+            voicedFetchWalletDashboard();
+
+            const elapsed = Date.now() - (walletTopupState.startedAt || Date.now());
+            if (elapsed > walletTopupState.maxWaitMs) {
+                walletStopTopupPoll();
+                walletTopupState.waiting = false;
+                walletTopupState.transactionId = null;
+                setWalletTopupStep("form");
+                const errEl = document.getElementById("wallet-topup-error");
+                if (errEl) {
+                    errEl.textContent = "We did not receive M-Pesa confirmation in time. You can close and try again.";
+                    errEl.classList.remove("hidden");
+                }
+                if (closeBtn) {
+                    closeBtn.classList.remove("opacity-40", "pointer-events-none");
+                    closeBtn.disabled = false;
+                }
+                return;
+            }
+
+            if (walletTopupState.transactionId) {
+                try {
+                    const r = await fetch(
+                        mpesaTopupStatusUrl + "?transaction_id=" + encodeURIComponent(walletTopupState.transactionId),
+                        { credentials: "same-origin", headers: { "X-Requested-With": "XMLHttpRequest" } }
+                    );
+                    if (r.ok) {
+                        const d = await r.json();
+                        if (d.ok && d.status === "FL") {
+                            walletStopTopupPoll();
+                            walletTopupState.waiting = false;
+                            walletTopupState.transactionId = null;
+                            setWalletTopupStep("form");
+                            const errEl = document.getElementById("wallet-topup-error");
+                            if (errEl) {
+                                errEl.textContent = d.failure_message || "Payment was not completed.";
+                                errEl.classList.remove("hidden");
+                            }
+                            await voicedFetchWalletDashboard();
+                            if (closeBtn) {
+                                closeBtn.classList.remove("opacity-40", "pointer-events-none");
+                                closeBtn.disabled = false;
+                            }
+                            return;
+                        }
+                        if (d.ok && d.status === "CO") {
+                            const current = parseAvailableFromDOM();
+                            const target = (walletTopupState.startAvailable || 0) + (walletTopupState.requestedAmount || 0);
+                            if (walletTopupState.requestedAmount > 0 && current >= target - 0.01) {
+                                walletStopTopupPoll();
+                                walletTopupState.waiting = false;
+                                walletTopupState.transactionId = null;
+                                setWalletTopupStep("success");
+                                document.getElementById("wallet-topup-error")?.classList.add("hidden");
+                                await voicedFetchWalletDashboard();
+                                if (closeBtn) {
+                                    closeBtn.classList.remove("opacity-40", "pointer-events-none");
+                                    closeBtn.disabled = false;
+                                }
+                                return;
+                            }
+                        }
+                    }
+                } catch (e) { /* ignore */ }
+            }
+
+            const current = parseAvailableFromDOM();
+            const target = (walletTopupState.startAvailable || 0) + (walletTopupState.requestedAmount || 0);
+            if (walletTopupState.requestedAmount > 0 && current >= target - 0.01) {
+                walletStopTopupPoll();
+                walletTopupState.waiting = false;
+                walletTopupState.transactionId = null;
+                setWalletTopupStep("success");
+                document.getElementById("wallet-topup-error")?.classList.add("hidden");
+                await voicedFetchWalletDashboard();
+                if (closeBtn) {
+                    closeBtn.classList.remove("opacity-40", "pointer-events-none");
+                    closeBtn.disabled = false;
+                }
+            }
+        } finally {
+            walletTopupPollBusy = false;
+        }
+    }
+
+    window.walletTopupCheckStatusNow = async function() {
+        if (!walletTopupState.waiting) return;
+        const btn = document.getElementById("wallet-mpesa-check-status");
+        if (btn) btn.disabled = true;
+        try {
+            var w = 0;
+            while (walletTopupPollBusy && w < 40) {
+                await new Promise(function(r) { setTimeout(r, 80); });
+                w++;
+            }
+            await walletTopupPollTick();
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    };
+
+    document.body.addEventListener("htmx:beforeRequest", function(evt) {
+        if (walletTopupFormFrom(evt)) {
+            const m = document.getElementById("walletTopupModal");
+            if (m) {
+                m.setAttribute("data-processing", "1");
+                const c = document.getElementById("walletTopupCloseBtn");
+                if (c) {
+                    c.classList.add("opacity-40", "pointer-events-none");
+                    c.disabled = true;
+                }
+            }
+            document.getElementById("wallet-topup-error")?.classList.add("hidden");
+        }
+    });
+
+    document.body.addEventListener("htmx:afterRequest", function(evt) {
+        if (!walletTopupFormFrom(evt)) return;
+        const form = walletTopupFormFrom(evt);
+        const m = document.getElementById("walletTopupModal");
+        if (m) {
+            m.removeAttribute("data-processing");
+        }
+        const xhr = evt.detail.xhr;
+        const c = document.getElementById("walletTopupCloseBtn");
+        if (xhr && xhr.status >= 400) {
+            const err = document.getElementById("wallet-topup-error");
+            if (err) {
+                err.textContent = xhr.status === 422 ? "" : "Request failed. Try again.";
+                if (xhr.status === 422) err.classList.add("hidden");
+                else err.classList.remove("hidden");
+            }
+            if (c) {
+                c.classList.remove("opacity-40", "pointer-events-none");
+                c.disabled = false;
+            }
+            return;
+        }
+
+        const meta = document.getElementById("wallet-topup-txn-meta");
+        const tidRaw = meta && meta.getAttribute("data-transaction-id");
+        walletTopupState.transactionId = tidRaw ? parseInt(tidRaw, 10) : null;
+
+        walletTopupState.waiting = true;
+        walletTopupState.startedAt = Date.now();
+        walletTopupState.startAvailable = parseAvailableFromDOM();
+        walletTopupState.requestedAmount = (() => {
+            const amtEl = form?.querySelector('input[name="amount"]');
+            const n = amtEl ? parseFloat(amtEl.value) : 0;
+            return isNaN(n) ? 0 : n;
+        })();
+
+        setWalletTopupStep("waiting");
+        if (c) {
+            c.classList.add("opacity-40", "pointer-events-none");
+            c.disabled = true;
+        }
+
+        walletStopTopupPoll();
+        walletTopupPollTick();
+        pollId = setInterval(function() {
+            walletTopupPollTick();
+        }, 3000);
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        setInterval(voicedFetchWalletDashboard, 15000);
+        document.addEventListener("visibilitychange", function() {
+            if (document.visibilityState === "visible") voicedFetchWalletDashboard();
+        });
+    });
+})();
+</script>
+{% endblock %}

@@ -3,15 +3,26 @@ from django.utils.html import format_html
 from django.utils import timezone
 from django.http import HttpResponseRedirect
 from django.urls import path, reverse
-from .models import Bill, ScrapeLog, BillVote
-from .tasks import run_all_scrapers_sync
+from .models import Bill, BillOutcome, MissingTranslation, ScrapeLog, BillVote, SMSLog
+from .tasks import generate_bill_audio_task, notify_bill_outcome_participants_task, run_all_scrapers_sync
 
 
 @admin.register(Bill)
 class BillAdmin(admin.ModelAdmin):
     change_list_template = "admin/bills/bill/change_list.html"
-    list_display = ('short_id', 'title_short', 'status_pill', 'is_processed_by_ai', 'support_count', 'oppose_count')
-    list_filter = ('status', 'is_processed_by_ai')
+    list_display = (
+        'short_id', 'title_short', 'government_level', 'county',
+        'status_pill', 'is_processed_by_ai',
+        'is_sw_ready', 'is_sh_ready', 'translation_needed',
+        'support_count', 'oppose_count'
+    )
+    list_filter = (
+        'status',
+        'government_level',
+        'is_processed_by_ai',
+        'is_sw_ready',
+        'is_sh_ready',
+    )
     search_fields = ('title', 'short_id')
     readonly_fields = ('short_id', 'view_count', 'support_count', 'oppose_count', 'document_hash')
     actions = ['approve_and_publish']
@@ -55,9 +66,16 @@ class BillAdmin(admin.ModelAdmin):
     def title_short(self, obj):
         return obj.title[:50] + "..." if len(obj.title) > 50 else obj.title
 
+    def translation_needed(self, obj):
+        return obj.missing_translations.filter(resolved=False).exists()
+    translation_needed.boolean = True
+    translation_needed.short_description = "Requires Translation"
+
     @admin.action(description="Approve and Publish selected bills")
     def approve_and_publish(self, request, queryset):
         updated = queryset.update(status=Bill.Status.PUBLISHED)
+        for bill in queryset:
+            generate_bill_audio_task.delay(str(bill.id))
         self.message_user(request, f"{updated} bill(s) published.")
 
 
@@ -79,3 +97,43 @@ class ScrapeLogAdmin(admin.ModelAdmin):
 @admin.register(BillVote)
 class BillVoteAdmin(admin.ModelAdmin):
     list_display = ('bill', 'user', 'vote_type', 'created_at')
+
+
+@admin.register(SMSLog)
+class SMSLogAdmin(admin.ModelAdmin):
+    list_display = ('created_at', 'phone', 'status', 'purpose', 'bill', 'user')
+    list_filter = ('status', 'purpose')
+    search_fields = ('phone', 'message', 'error_message')
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(BillOutcome)
+class BillOutcomeAdmin(admin.ModelAdmin):
+    list_display = ("bill", "final_status", "created_at")
+    list_filter = ("final_status", "created_at")
+    search_fields = ("bill__title", "summary_text")
+    readonly_fields = ("created_at", "updated_at")
+    actions = ["resend_outcome_notifications"]
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        notify_bill_outcome_participants_task.delay(obj.id)
+        self.message_user(request, "Outcome saved. Participant notifications queued.")
+
+    @admin.action(description="Resend outcome notifications (rate-limited)")
+    def resend_outcome_notifications(self, request, queryset):
+        count = 0
+        for outcome in queryset:
+            notify_bill_outcome_participants_task.delay(outcome.id)
+            count += 1
+        self.message_user(
+            request,
+            f"Queued resend for {count} outcome(s). Existing per-user rate limits still apply.",
+        )
+
+
+@admin.register(MissingTranslation)
+class MissingTranslationAdmin(admin.ModelAdmin):
+    list_display = ("bill", "language", "resolved", "created_at")
+    list_filter = ("language", "resolved")
+    search_fields = ("bill__title", "note")

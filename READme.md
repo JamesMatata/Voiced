@@ -1,233 +1,218 @@
-# Voiced 🇰🇪
+# Voiced
 
-### *The Nation Is Talking*
+Voiced is a multi-channel civic participation platform that helps citizens understand legislation, discuss it, and submit verifiable sentiment through Web, USSD, and Voice.
 
-**Voiced** is a legislative accessibility engine designed to bridge the gap between **government policy** and **citizen understanding**.
+## Core Capabilities
 
-Across many African nations, laws are published as dense **100-page PDFs written in Legal English**, making them difficult for ordinary citizens to read, understand, or discuss.
+- AI-powered bill summaries and analysis (English, Kiswahili, Sheng)
+- Public participation through:
+  - Web UI
+  - USSD sessions
+  - Voice call (IVR keypad vote capture)
+- Identity verification flow with paid KYC
+- Wallet + M-Pesa payment rails with pending-state reliability handling
+- Public vote receipt ledger (anonymized, searchable, CSV export)
+- Bill outcome feedback loop across in-app, email, and SMS
+- Printable outreach posters (PDF/PNG)
 
-**Voiced uses AI to simplify, translate, and distribute these laws to every Kenyan** — whether they use a high-end smartphone or a **500-shilling feature phone**.
+## Feature Map
 
----
+### 1) Bill Intelligence
+- Scrapes bill sources
+- Runs AI analysis and translations
+- Produces:
+  - Short summaries
+  - Full markdown overviews
+  - SMS-friendly summary
+  - Tri-lingual bill audio summaries
 
-# The Problem
+### 2) Voting and Receipts
+- Vote channels: Web, USSD, Voice
+- Receipt generation: deterministic `receipt_id` hash per vote
+- Public ledger:
+  - Receipt search
+  - Pagination
+  - CSV export
 
-### 1. The Jargon Barrier
+### 3) Identity and Official Vote Status
+- Paid KYC verification flow (wallet or M-Pesa STK)
+- National ID encrypted at rest (`EncryptedCharField`)
+- `is_kenyan` acts as the official-vote gate
+- On successful verification, ongoing bill votes are promoted to verified counters
 
-Legislation is written in **complex Legal English**, creating a barrier that prevents the average citizen from understanding laws that affect their lives.
+### 4) Payments and Wallet
+- Wallet top-up via M-Pesa STK
+- Service deductions (reports, drafts, voice summary)
+- Reservation/release pattern for paid services
+- Stale pending transaction sweeper and reliability notifications
 
-### 2. The Digital Access Gap
+### 5) USSD + Voice
+- USSD menu supports:
+  - Browse/search bills
+  - Vote
+  - Identity verification
+  - Wallet top-up
+  - Paid “Listen to Summary”
+- Voice callback:
+  - Plays language audio summary
+  - Captures keypad vote (1 support / 2 oppose)
 
-Government documents are often **massive PDF files** that:
+### 6) Notifications
+- Channels: websocket/in-app, email, SMS
+- Outcome notifications with resend admin action
+- Post-vote feedback SMS with receipt + verification nudge (if unverified)
 
-* consume expensive mobile data
-* crash low-memory phones
-* are difficult to navigate on small screens
+## Tech Stack
 
-This disproportionately affects citizens in **rural areas and informal settlements**.
+| Area | Tools |
+|---|---|
+| Backend | Django |
+| Realtime | Django Channels + channels_redis |
+| Task Queue | Celery + Redis |
+| DB | SQLite (default), ORM-compatible with relational DBs |
+| AI Text | Gemini |
+| KYC | Smile ID Enhanced KYC API |
+| Mobile Money | Safaricom M-Pesa STK integration |
+| Telco/Comms | Africa's Talking (USSD, SMS, Voice) |
+| Media/Docs | Pillow, ReportLab, qrcode |
+| Frontend | Django Templates + HTMX + Tailwind CDN |
 
-### 3. Language Exclusion
+## Environment Variables
 
-National conversations are often limited to people comfortable with **formal English**, excluding millions of citizens who communicate primarily in **Sheng** or **Kiswahili**.
+Create `.env` in project root:
 
----
+```env
+# Django
+DJANGO_SECRET_KEY=change-me
+BASE_URL=http://127.0.0.1:8000
+VOTE_RECEIPT_SALT=optional-custom-salt
+USSD_SHORTCODE=*384*86584#
+USSD_VERIFY_OPTION_INDEX=4
+SITE_ID=1
 
-# The Solution — A Multi-Channel AI Bridge
-
-Voiced transforms complex legislation into a **real-time, community-driven conversation platform**.
-
----
-
-# AI-Powered Legislative Engine
-
-### Gemini-Powered Summaries
-
-Complex bills are processed using AI to generate **“The Bottom Line”** — simple summaries explaining **how the law actually affects citizens**.
-
-### Sheng & Kiswahili Translation
-
-Legal insights are translated into **everyday language**, ensuring accessibility for grassroots communities.
-
-### AI Moderation Layer
-
-A moderation layer automatically filters:
-
-* hate speech
-* incitement
-* toxic content
-
-This ensures the platform remains a **safe environment for civic debate**.
-
----
-
-# Real-Time Engagement
-
-### Live Notifications
-
-Citizens receive **instant alerts** the moment a bill moves in Parliament.
-
-No page refresh needed.
-
-### Community Live Chat
-
-Users can discuss bills **in real time**, allowing the public to debate national policy together.
-
----
-
-# The USSD & SMS Handshake
-
-Voiced ensures **every Kenyan can participate**, even without internet.
-
-### USSD Portal
-
-Dial:
-
-```
-*384*86584#
-```
-
-Users can:
-
-* read AI-generated bill summaries
-* navigate legislation easily
-* cast a verified vote
-
-All **without internet access**.
-
----
-
-### SMS Alerts
-
-When new legislation is processed, the system sends notifications through **Short Code 66160**.
-
-Users receive updates in their **preferred language**.
-
----
-
-# Technical Architecture
-
-| Layer              | Technology                                             |
-| ------------------ | ------------------------------------------------------ |
-| Backend            | Django (Python)                                        |
-| Frontend           | Django Templates (HTML / CSS / JS)                     |
-| Real-Time          | Django Channels & WebSockets                           |
-| AI Processing      | Gemini                                                 |
-| Content Moderation | LLMAPI / OpenAI                                        |
-| Connectivity       | Africa's Talking (USSD, SMS Gateway, Short Code 66160) |
-
----
-
-# Installation & Setup
-
-## Prerequisites
-
-* Python **3.10+**
-* Africa’s Talking API Key
-* Gemini API Key
-* LLMAPI Key
-
----
-
-# Backend Setup
-
-## 1. Clone the Repository
-
-```bash
-git clone https://github.com/JamesMatata/Voiced
-cd Voiced
-```
-
----
-
-## 2. Environment Configuration
-
-Create a `.env` file:
-
-```
-DJANGO_SECRET_KEY=your-key
+# AI
 GEMINI_API_KEY=your-gemini-key
 LLMAPI_KEY=your-llmapi-key
 
-AT_USERNAME=sandbox
-AT_API_KEY=your-at-key
+# Smile ID KYC
+SMILE_ID_BASE_URL=https://your-smile-host
+SMILE_ID_API_KEY=your-smile-api-key
+
+# M-Pesa
+MPESA_ENV=sandbox
+MPESA_CONSUMER_KEY=...
+MPESA_CONSUMER_SECRET=...
+MPESA_SHORTCODE=...
+MPESA_PASSKEY=...
+MPESA_INITIATOR_NAME=...
+MPESA_INITIATOR_PASSWORD=...
+
+# Africa's Talking
+AFRICASTALKING_USERNAME=sandbox
+AFRICASTALKING_API_KEY=your-at-api-key
+AFRICASTALKING_SENDER_ID=66160
+AFRICASTALKING_VOICE_NUMBER=+2547XXXXXXXX
 AT_USSD_CODE=*384*86584#
-AT_SENDER_ID=66160
 
-BASE_URL=your-base-url
+# ElevenLabs (bill audio)
+ELEVENLABS_API_KEY=...
+ELEVENLABS_VOICE_ID=default-voice-id
+ELEVENLABS_VOICE_ID_EN=optional
+ELEVENLABS_VOICE_ID_SW=optional
+ELEVENLABS_VOICE_ID_SH=optional
+ELEVENLABS_MODEL_ID=eleven_multilingual_v2
+
+# Redis / cache
+DJANGO_CACHE_REDIS_URL=redis://127.0.0.1:6379/1
+DJANGO_USE_LOCAL_CACHE=0
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_RESULT_BACKEND=redis://localhost:6379/0
+
+# OAuth (optional)
+GOOGLE_OAUTH_CLIENT_ID=
+GOOGLE_OAUTH_CLIENT_SECRET=
+APPLE_OAUTH_CLIENT_ID=
+APPLE_OAUTH_CLIENT_SECRET=
 ```
 
----
-
-## 3. Install Dependencies
+## Local Setup
 
 ```bash
+# 1) Create + activate virtualenv
+python -m venv .venv
+.\.venv\Scripts\activate
+
+# 2) Install dependencies
 pip install -r requirements.txt
-```
 
----
-
-## 4. Run Migrations
-
-```bash
+# 3) Migrations
+python manage.py makemigrations
 python manage.py migrate
-```
 
----
+# 4) i18n compile
+python manage.py makemessages -l sw -l sh
+python manage.py compilemessages
 
-## 5. Start the Development Server
+# 5) Sanity check
+python manage.py check
 
-```bash
+# 6) Run app
 python manage.py runserver
 ```
 
-Visit:
+## Required Background Services
 
+Run each in separate terminal:
+
+```bash
+# Redis
+redis-server
 ```
-http://127.0.0.1:8000
+
+```bash
+# Celery worker
+celery -A Voiced worker -l info
 ```
 
----
+```bash
+# Celery beat (scheduled jobs)
+celery -A Voiced beat -l info
+```
 
-# Mission
+## High-Value Admin/Ops Commands
 
-Voiced exists to **democratize legislation**.
+```bash
+# list migration state
+python manage.py showmigrations
 
-Every citizen deserves to:
+# sweep stale pending payment states manually
+python manage.py sweep_pending_transactions
+```
 
-* understand the laws that govern them
-* participate in national conversations
-* shape the future of their country
+## Reliability + Integrity Notes
 
-**The Nation Is Talking.**
+- National ID values are encrypted at rest in model fields.
+- Financial deductions use transactional guards and `F()` updates where needed.
+- STK callback is status-aware and linked to payment intent.
+- Background tasks process SMS/audio/report generation and retries.
+- Vote receipts are generated consistently at model level.
 
----
+## Project Structure (Key Apps)
 
-# Founders
+- `bills/` - bill ingestion, AI processing, poster/audio generation, admin workflows
+- `core/` - primary web views and templates (bill detail, ledger, exports)
+- `engagement/` - USSD and voice callbacks
+- `accounts/` - profiles, KYC, wallet view, auth flows
+- `payments/` - transactions, M-Pesa callbacks, wallet operations, reliability tasks
+- `notifications/` - participant and outcome notification logic
 
-### James Matata
+## Contributing
 
-**Co-Founder & Developer**
+Contributions are welcome. For significant changes:
+- open an issue first
+- include reproducible steps
+- include test/verification notes for Web + USSD + payment impact
 
-GitHub: [https://github.com/JamesMatata](https://github.com/JamesMatata)
+## License
 
----
-
-### Gloria Nduta
-
-**Co-Founder & Developer**
-
-Role: Software Development & Platform Development
-
----
-
-# Contributing
-
-We welcome contributions that help improve **legislative accessibility and civic engagement**.
-
-Feel free to open issues or submit pull requests.
-
----
-
-# License
-
-This project is licensed under the **MIT License**.
+MIT

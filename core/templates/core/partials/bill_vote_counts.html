@@ -5,6 +5,10 @@
     hx-target="this"
     hx-swap="outerHTML"
 >
+    <div class="mb-2 flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-zinc-500">
+        <span>Community Sentiment</span>
+        <span id="count-total">{{ bill.support_count|add:bill.oppose_count }} Votes</span>
+    </div>
     <div class="flex justify-between items-end mb-2">
         <div class="text-center">
             <p id="count-support" class="text-xs font-black text-green-700 uppercase">{{ bill.support_count }}</p>

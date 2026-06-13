@@ -3,6 +3,8 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User
 from .models import Bill
 from notifications.utils import send_live_notification
+from .tasks import generate_bill_audio_task, notify_subscribers_sms_for_new_bill
+
 
 @receiver(post_save, sender=Bill)
 def bill_processed_notification(sender, instance, created, **kwargs):
@@ -22,3 +24,7 @@ def bill_processed_notification(sender, instance, created, **kwargs):
                     link=f"/bills/{instance.id}/",
                     n_type='BILL'
                 )
+
+        notify_subscribers_sms_for_new_bill.delay(str(instance.id))
+        if not (instance.audio_summary_en and instance.audio_summary_sw and instance.audio_summary_sh):
+            generate_bill_audio_task.delay(str(instance.id))

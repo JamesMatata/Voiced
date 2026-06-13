@@ -1,29 +1,29 @@
 {% extends 'core/base.html' %}
+{% load i18n %}
 
 {% block content %}
 <div class="max-w-6xl mx-auto px-4 py-8 space-y-12">
 
     <div class="border-b border-zinc-300 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-            <h1 class="text-3xl font-black uppercase tracking-tighter text-zinc-900">Identity & Settings</h1>
-            <p class="text-zinc-600 font-medium mt-2">Manage your digital presence and platform preferences.</p>
+            <h1 class="text-3xl font-black uppercase tracking-tighter text-zinc-900">{% trans "Identity & Settings" %}</h1>
+            <p class="text-zinc-600 font-medium mt-2">{% trans "Manage your digital presence and platform preferences." %}</p>
         </div>
         <div class="flex items-center gap-4">
             <div class="px-4 py-2 bg-zinc-100 border border-zinc-200 rounded-md">
-                <p class="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-0.5">Alias Privacy</p>
-                <p class="text-sm font-black text-zinc-900">Per-Bill Ghost Alias Enabled</p>
+                <p class="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-0.5">{% trans "Alias Privacy" %}</p>
+                <p class="text-sm font-black text-zinc-900">{% if profile.use_alias %}{% trans "Anonymous mode enabled" %}{% else %}{% trans "Username mode enabled" %}{% endif %}</p>
             </div>
+            {% if profile.is_kenyan %}
+            <span class="inline-flex items-center justify-center w-10 h-10 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-md" title="Verified Kenyan Citizen">
+                <i class="ph ph-shield-check text-xl"></i>
+            </span>
+            {% else %}
+            <span class="inline-flex items-center justify-center w-10 h-10 bg-red-50 border border-red-200 text-red-700 rounded-md" title="Verify your Kenyan identity">
+                <i class="ph ph-x-circle text-xl"></i>
+            </span>
+            {% endif %}
         </div>
-    </div>
-
-    <div id="message-container">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="mb-6 p-4 rounded-md text-xs font-black uppercase tracking-widest {% if message.tags == 'success' %}bg-green-50 text-green-700 border-green-200{% else %}bg-red-50 text-red-700 border-red-200{% endif %} border">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -50,8 +50,13 @@
 
                         <div class="group">
                             <label class="block text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1.5 ml-1">Verified Email Address</label>
-                            <input type="email" name="email" value="{{ user.email }}" required
-                                   class="w-full p-4 bg-white border border-zinc-300 rounded-md focus:outline-none focus:border-zinc-950 font-bold text-sm transition-all focus:ring-1 focus:ring-zinc-950">
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <input id="current-email-display" type="email" name="email" value="{{ user.email }}" required readonly
+                                       class="w-full p-4 bg-zinc-100 border border-zinc-300 rounded-md font-bold text-sm text-zinc-700 cursor-not-allowed">
+                                <button type="button" onclick="toggleEmailChangeModal(true)" class="sm:w-auto min-h-[44px] px-4 rounded-md border border-zinc-900 text-zinc-900 bg-white text-[10px] font-black uppercase tracking-widest hover:bg-zinc-100 whitespace-nowrap">
+                                    {% trans "Change Email" %}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -82,9 +87,9 @@
                                     Kiswahili
                                 </button>
 
-                                <button type="button" onclick="selectLanguage('sh')" id="lang-sh"
+                                <button type="button" onclick="selectLanguage('sr')" id="lang-sr"
                                         class="lang-btn flex-1 py-3 px-4 rounded-md font-black uppercase tracking-widest text-[10px] transition-all
-                                        {% if profile.language == 'sh' %}bg-zinc-950 text-white hover:text-white{% else %}bg-transparent text-zinc-500 hover:text-zinc-950{% endif %}">
+                                        {% if profile.language == 'sr' %}bg-zinc-950 text-white hover:text-white{% else %}bg-transparent text-zinc-500 hover:text-zinc-950{% endif %}">
                                     Sheng
                                 </button>
                             </div>
@@ -118,7 +123,7 @@
 
                 <div class="flex justify-start">
                     <button type="submit" class="bg-zinc-950 text-white px-10 py-4 rounded-md font-black uppercase tracking-[0.2em] text-[10px] hover:bg-black transition-all active:scale-95">
-                        Save All Changes
+                        {% trans "Save All Changes" %}
                     </button>
                 </div>
             </form>
@@ -139,70 +144,237 @@
                 <p class="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-2">Alias Integrity</p>
                 <p class="text-[11px] text-zinc-600 font-medium italic">"Your alias is unique to your digital thumbprint and cannot be changed."</p>
             </div>
+
+            {% if not profile.is_kenyan %}
+            <div class="p-6 border border-amber-200 rounded-md bg-amber-50 space-y-4">
+                <p class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-800">Identity &amp; Influence</p>
+                <p class="text-xs text-amber-900 font-medium leading-relaxed">
+                    Make your voice official. Your current votes are recorded as "Public Pulse". Verify your Kenyan identity to have your voice included in the official reports sent to Parliament.
+                </p>
+                <button type="button" onclick="toggleVerificationModal(true)" class="w-full px-4 py-3 bg-amber-600 text-white rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-amber-700">
+                    Verify Identity (KES 60)
+                </button>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<div id="passwordModal" class="fixed inset-0 z-[10000] hidden flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-sm transition-opacity">
-    <div class="bg-white w-full max-w-md rounded-md overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-
-        <div class="bg-zinc-950 text-white px-6 py-4 flex justify-between items-center">
-            <h3 class="font-black uppercase tracking-widest text-xs">Update Password</h3>
-            <button onclick="togglePasswordModal(false)" class="text-zinc-400 hover:text-white transition">
+<div id="passwordModal" class="fixed inset-0 z-[10000] hidden flex items-start justify-center pt-[10vh] px-4 pb-6 bg-zinc-950/70 backdrop-blur-sm" onclick="if(event.target===this)togglePasswordModal(false);">
+    <div class="bg-white w-full max-w-md rounded-xl border border-zinc-200 shadow-2xl max-h-[85vh] flex flex-col" role="dialog" aria-modal="true" onclick="event.stopPropagation();">
+        <header class="flex items-start justify-between gap-3 px-5 pt-5 pb-3 border-b border-zinc-100">
+            <div>
+                <h3 class="text-base font-black uppercase tracking-tight text-zinc-900">Change Password</h3>
+                <p class="text-xs text-zinc-500 font-medium mt-1">Secure OTP flow to update your password.</p>
+            </div>
+            <button type="button" onclick="togglePasswordModal(false)" class="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-900">
                 <i class="ph ph-x text-xl"></i>
             </button>
-        </div>
+        </header>
+        <div class="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4">
+            <div id="password-change-error" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700"></div>
+            <div id="password-change-info" class="hidden rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700"></div>
 
-        <form id="passwordForm" method="POST" class="p-6 space-y-6">
-            {% csrf_token %}
-            <input type="hidden" name="form_type" value="change_password">
+            <section id="password-step-request" class="rounded-lg border border-zinc-200 p-4 space-y-3">
+                <p class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Step 1: Request OTP</p>
+                <p class="text-xs text-zinc-600">Send a 6-digit OTP to your verified email ({{ user.email }}).</p>
+                <button id="password-otp-request-btn" type="button" onclick="requestPasswordOtp()" class="w-full min-h-[44px] px-4 rounded-lg bg-zinc-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-black disabled:opacity-60 disabled:cursor-not-allowed">
+                    Send OTP Code
+                </button>
+                <p id="password-otp-cooldown-text" class="hidden text-[10px] font-bold text-zinc-500"></p>
+            </section>
 
-            {% for field in password_form %}
-                <div class="relative">
-                    <label class="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1.5 ml-1">{{ field.label }}</label>
-                    <div class="relative group">
-                        {{ field }}
-                        <button type="button" onclick="togglePasswordVisibility(this)"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-950 transition">
-                            <i class="ph ph-eye text-lg"></i>
-                        </button>
-                    </div>
-                </div>
-            {% endfor %}
+            <section id="password-step-verify" class="hidden rounded-lg border border-zinc-200 p-4 space-y-3">
+                <p class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Step 2: Verify OTP</p>
+                <input id="password-otp-code" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="6-digit OTP code" class="w-full min-h-[44px] border border-zinc-200 rounded-lg px-3 py-2 text-sm font-medium text-center tracking-[0.2em]">
+                <button type="button" onclick="verifyPasswordOtp()" class="w-full min-h-[44px] px-4 rounded-lg bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700">
+                    Verify OTP
+                </button>
+            </section>
 
-            <div id="password-error" class="hidden p-3 bg-red-50 text-red-600 text-[10px] font-black uppercase rounded-md border border-red-200"></div>
-        </form>
-
-        <div class="bg-zinc-50 p-4 border-t border-zinc-200 flex gap-3">
-            <button onclick="togglePasswordModal(false)" class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-zinc-950 transition">
-                Cancel
-            </button>
-            <button type="button" onclick="submitPasswordForm()" class="flex-1 py-3 bg-zinc-950 text-white rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-black transition">
-                Save Changes
-            </button>
+            <section id="password-step-set" class="hidden rounded-lg border border-zinc-200 p-4 space-y-3">
+                <p class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Step 3: Set New Password</p>
+                <input id="password-current" type="password" placeholder="Current password" class="w-full min-h-[44px] border border-zinc-200 rounded-lg px-3 py-2 text-sm font-medium">
+                <input id="password-new-1" type="password" placeholder="New password" class="w-full min-h-[44px] border border-zinc-200 rounded-lg px-3 py-2 text-sm font-medium">
+                <input id="password-new-2" type="password" placeholder="Confirm new password" class="w-full min-h-[44px] border border-zinc-200 rounded-lg px-3 py-2 text-sm font-medium">
+                <button type="button" onclick="submitPasswordChange()" class="w-full min-h-[44px] px-4 rounded-lg bg-zinc-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-black">
+                    Update Password
+                </button>
+            </section>
         </div>
     </div>
 </div>
 
+{% include "accounts/verification_modal.html" %}
+{% include "accounts/email_change_modal.html" %}
+
 <script>
-    document.querySelectorAll('input[type="password"]').forEach(input => {
-        input.className = "w-full pl-3 pr-10 py-3 border border-zinc-300 rounded-md focus:outline-none focus:border-zinc-950 font-bold text-xs transition";
-    });
+    function launchConfettiBurst() {
+        const colors = ['#22c55e', '#ef4444', '#0ea5e9', '#eab308', '#a855f7'];
+        for (let i = 0; i < 120; i++) {
+            const piece = document.createElement('div');
+            piece.className = 'fixed z-[12000] pointer-events-none';
+            piece.style.left = Math.random() * 100 + 'vw';
+            piece.style.top = '-20px';
+            piece.style.width = '8px';
+            piece.style.height = '12px';
+            piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+            piece.style.opacity = '0.9';
+            piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+            piece.style.transition = `transform ${1.8 + Math.random() * 1.7}s linear, top ${1.8 + Math.random() * 1.7}s linear, opacity 2.8s ease`;
+            document.body.appendChild(piece);
+            requestAnimationFrame(() => {
+                piece.style.top = '105vh';
+                piece.style.transform = `translateX(${(Math.random() - 0.5) * 220}px) rotate(${Math.random() * 780}deg)`;
+                piece.style.opacity = '0';
+            });
+            setTimeout(() => piece.remove(), 3500);
+        }
+    }
 
     function togglePasswordModal(show) {
         const modal = document.getElementById('passwordModal');
         modal.classList.toggle('hidden', !show);
+        if (!show && passwordCooldownInterval) {
+            clearInterval(passwordCooldownInterval);
+            passwordCooldownInterval = null;
+        }
+        if (show) {
+            loadPasswordChangeState();
+        }
     }
 
-    function togglePasswordVisibility(btn) {
-        const input = btn.previousElementSibling;
-        const icon = btn.querySelector('i');
-        if (input.type === "password") {
-            input.type = "text";
-            icon.className = "ph ph-eye-closed text-lg";
+    const passwordStateUrl = "{% url 'password_change_state' %}";
+    const passwordRequestUrl = "{% url 'password_change_request_code' %}";
+    const passwordVerifyUrl = "{% url 'password_change_verify_code' %}";
+    const passwordSubmitUrl = "{% url 'password_change_submit' %}";
+    let passwordCooldownInterval = null;
+
+    function showPasswordMsg(kind, message) {
+        const err = document.getElementById('password-change-error');
+        const info = document.getElementById('password-change-info');
+        err.classList.add('hidden');
+        info.classList.add('hidden');
+        if (!message) return;
+        if (kind === 'error') {
+            err.textContent = message;
+            err.classList.remove('hidden');
         } else {
-            input.type = "password";
-            icon.className = "ph ph-eye text-lg";
+            info.textContent = message;
+            info.classList.remove('hidden');
+        }
+    }
+
+    function setPasswordStep(stepId) {
+        ['password-step-request', 'password-step-verify', 'password-step-set'].forEach(id => {
+            document.getElementById(id).classList.add('hidden');
+        });
+        document.getElementById(stepId).classList.remove('hidden');
+    }
+
+    function setPasswordCooldown(seconds) {
+        const btn = document.getElementById('password-otp-request-btn');
+        const label = document.getElementById('password-otp-cooldown-text');
+        if (passwordCooldownInterval) {
+            clearInterval(passwordCooldownInterval);
+            passwordCooldownInterval = null;
+        }
+        if (!btn || !label) return;
+        let remaining = Number(seconds || 0);
+        if (remaining <= 0) {
+            btn.disabled = false;
+            label.classList.add('hidden');
+            label.textContent = '';
+            return;
+        }
+        btn.disabled = true;
+        label.classList.remove('hidden');
+        label.textContent = `You can request a new code in ${remaining}s.`;
+        passwordCooldownInterval = setInterval(() => {
+            remaining -= 1;
+            if (remaining <= 0) {
+                clearInterval(passwordCooldownInterval);
+                passwordCooldownInterval = null;
+                btn.disabled = false;
+                label.classList.add('hidden');
+                label.textContent = '';
+                return;
+            }
+            label.textContent = `You can request a new code in ${remaining}s.`;
+        }, 1000);
+    }
+
+    async function loadPasswordChangeState() {
+        try {
+            const response = await fetch(passwordStateUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await response.json();
+            if (!data.ok) return;
+            if (data.otp_verified) {
+                setPasswordStep('password-step-set');
+                setPasswordCooldown(0);
+                return;
+            }
+            if (data.lockout) {
+                setPasswordStep('password-step-request');
+                showPasswordMsg('error', 'Too many failed attempts. OTP locked. Request a new code.');
+                setPasswordCooldown(data.cooldown_remaining || 0);
+                return;
+            }
+            if (data.has_pending) {
+                setPasswordStep('password-step-verify');
+                setPasswordCooldown(data.cooldown_remaining || 0);
+                return;
+            }
+            setPasswordStep('password-step-request');
+            setPasswordCooldown(data.cooldown_remaining || 0);
+        } catch (error) {
+            showPasswordMsg('error', 'Unable to load password state.');
+        }
+    }
+
+    async function requestPasswordOtp() {
+        showPasswordMsg('', '');
+        try {
+            const response = await fetch(passwordRequestUrl, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': '{{ csrf_token }}' },
+            });
+            const data = await response.json();
+            if (!response.ok || !data.ok) {
+                showPasswordMsg('error', data.error || 'Unable to send OTP.');
+                if (data && typeof data.cooldown_remaining !== 'undefined') {
+                    setPasswordCooldown(data.cooldown_remaining);
+                }
+                return;
+            }
+            showPasswordMsg('info', data.message || 'OTP sent.');
+            setPasswordStep('password-step-verify');
+            setPasswordCooldown(data.cooldown_remaining || 0);
+        } catch (error) {
+            showPasswordMsg('error', 'Unable to send OTP.');
+        }
+    }
+
+    async function verifyPasswordOtp() {
+        const code = (document.getElementById('password-otp-code').value || '').trim();
+        showPasswordMsg('', '');
+        try {
+            const body = new FormData();
+            body.append('code', code);
+            const response = await fetch(passwordVerifyUrl, {
+                method: 'POST',
+                body,
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': '{{ csrf_token }}' },
+            });
+            const data = await response.json();
+            if (!response.ok || !data.ok) {
+                showPasswordMsg('error', data.error || 'Invalid OTP code.');
+                return;
+            }
+            showPasswordMsg('info', data.message || 'OTP verified.');
+            setPasswordStep('password-step-set');
+        } catch (error) {
+            showPasswordMsg('error', 'Unable to verify OTP.');
         }
     }
 
@@ -219,28 +391,42 @@
         activeBtn.classList.add('bg-zinc-950', 'text-white', 'hover:text-white');
     }
 
-    async function submitPasswordForm() {
-        const form = document.getElementById('passwordForm');
-        const formData = new FormData(form);
-        const errorBox = document.getElementById('password-error');
-
+    async function submitPasswordChange() {
+        showPasswordMsg('', '');
+        const body = new FormData();
+        body.append('current_password', document.getElementById('password-current').value || '');
+        body.append('new_password1', document.getElementById('password-new-1').value || '');
+        body.append('new_password2', document.getElementById('password-new-2').value || '');
         try {
-            const response = await fetch(window.location.href, {
+            const response = await fetch(passwordSubmitUrl, {
                 method: 'POST',
-                body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                body,
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': '{{ csrf_token }}' },
             });
-
-            if (response.ok) {
-                window.location.reload();
-            } else {
-                const data = await response.json();
-                errorBox.innerText = data.error || "Please check your entries.";
-                errorBox.classList.remove('hidden');
+            const data = await response.json();
+            if (!response.ok || !data.ok) {
+                showPasswordMsg('error', data.error || 'Unable to change password.');
+                return;
             }
-        } catch (e) {
-            console.error(e);
+            togglePasswordModal(false);
+            window.location.reload();
+        } catch (error) {
+            showPasswordMsg('error', 'Unable to change password.');
         }
+    }
+
+    const KYC_JUST_VERIFIED = "{{ kyc_just_verified|yesno:'true,false' }}" === "true";
+    if (KYC_JUST_VERIFIED) {
+        document.addEventListener('DOMContentLoaded', function() {
+            launchConfettiBurst();
+            const box = document.getElementById('flash-toast-stack');
+            if (box) {
+                box.insertAdjacentHTML(
+                    'afterbegin',
+                    '<div class="flash-toast pointer-events-auto rounded-md border shadow-2xl p-3 pr-2 text-[10px] font-black uppercase tracking-widest flex items-start justify-between gap-2 transition-all duration-500 bg-emerald-50 text-emerald-800 border-emerald-200"><span class="leading-relaxed">Identity Verified! You are now an Official Kenyan Voice on Voiced.</span><button type="button" onclick="this.parentElement.remove()" class="flash-toast-close inline-flex items-center justify-center min-w-[28px] min-h-[28px] rounded text-current/70 hover:text-current"><i class="ph ph-x"></i></button></div>'
+                );
+            }
+        });
     }
 </script>
 {% endblock %}

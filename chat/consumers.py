@@ -43,6 +43,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'content': message_payload['content'],
                     'sender_alias': message_payload['sender_alias'],
                     'user_id': message_payload['user_id'],
+                    'is_verified_citizen': message_payload['is_verified_citizen'],
                     'parent_id': message_payload['parent_id'],
                     'parent_content': message_payload['parent_content']
                 }
@@ -81,7 +82,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         from chat.models import ChatMessage
 
         try:
-            message = ChatMessage.objects.select_related('parent_message').get(
+            message = ChatMessage.objects.select_related('parent_message', 'user__profile').get(
                 id=message_id,
                 bill_id=self.bill_id
             )
@@ -90,6 +91,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'content': message.content,
                 'sender_alias': message.get_display_alias(),
                 'user_id': message.user_id,
+                'is_verified_citizen': bool(
+                    getattr(getattr(message.user, "profile", None), "is_kenyan", False)
+                ),
                 'parent_id': message.parent_message_id,
                 'parent_content': message.parent_message.content if message.parent_message else ""
             }

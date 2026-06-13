@@ -1,0 +1,922 @@
+# Voiced Project Translation File.
+# Copyright (C) 2026 Voiced Kenya
+# This file is distributed under the same license as the Voiced package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Voiced 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-26 13:59+0300\n"
+"PO-Revision-Date: 2026-03-26 14:05+0300\n"
+"Last-Translator: Admin <admin@voiced.co.ke>\n"
+"Language-Team: English <en@li.org>\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\accounts\templates\accounts\profile.html:9
+msgid "Identity & Settings"
+msgstr "Identity & Settings"
+
+#: .\accounts\templates\accounts\profile.html:10
+msgid "Manage your digital presence and platform preferences."
+msgstr "Manage your digital presence and platform preferences."
+
+#: .\accounts\templates\accounts\profile.html:14
+msgid "Alias Privacy"
+msgstr "Alias Privacy"
+
+#: .\accounts\templates\accounts\profile.html:15
+msgid "Anonymous mode enabled"
+msgstr "Anonymous mode enabled"
+
+#: .\accounts\templates\accounts\profile.html:15
+msgid "Username mode enabled"
+msgstr "Username mode enabled"
+
+#: .\accounts\templates\accounts\profile.html:67
+msgid "Change Email"
+msgstr "Change Email"
+
+#: .\accounts\templates\accounts\profile.html:136
+msgid "Save All Changes"
+msgstr "Save All Changes"
+
+#: .\accounts\templates\accounts\wallet.html:4
+#: .\accounts\templates\accounts\wallet.html:11
+#: .\core\templates\core\base.html:116 .\core\templates\core\base.html:169
+msgid "Wallet"
+msgstr "Wallet"
+
+#: .\accounts\templates\accounts\wallet.html:12
+msgid "Balance, top-ups, and spending updated live."
+msgstr "Balance, top-ups, and spending updated live."
+
+#: .\accounts\templates\accounts\wallet.html:14
+msgid "Profile"
+msgstr "Profile"
+
+#: .\accounts\templates\accounts\wallet.html:32
+msgid "Available balance"
+msgstr "Available balance"
+
+#: .\accounts\templates\accounts\wallet.html:36
+#: .\core\templates\core\discussion_list.html:46
+#: .\core\templates\core\discussion_list.html:108
+msgid "Live"
+msgstr "Live"
+
+#: .\accounts\templates\accounts\wallet.html:40
+msgid "Total"
+msgstr "Total"
+
+#: .\accounts\templates\accounts\wallet.html:42
+msgid "Reserved"
+msgstr "Reserved"
+
+#: .\accounts\templates\accounts\wallet.html:46
+msgid "Top up"
+msgstr "Top up"
+
+#: .\accounts\templates\accounts\wallet.html:53
+msgid "Activity"
+msgstr "Activity"
+
+#: .\accounts\templates\accounts\wallet.html:99
+msgid "No activity yet"
+msgstr "No activity yet"
+
+#: .\accounts\templates\accounts\wallet.html:100
+msgid "Top up to get started."
+msgstr "Top up to get started."
+
+#: .\bills\models.py:36
+msgid "Processing"
+msgstr "Processing"
+
+#: .\bills\models.py:37
+msgid "Pending Review"
+msgstr "Pending Review"
+
+#: .\bills\models.py:38
+msgid "Published"
+msgstr "Published"
+
+#: .\bills\models.py:39 .\core\templates\core\bill_list.html:20
+#: .\core\templates\core\bill_list.html:77
+#: .\core\templates\core\bill_list.html:132
+#: .\core\templates\core\discussion_list.html:15
+msgid "Closed"
+msgstr "Closed"
+
+#: .\bills\models.py:115
+msgid "Passed"
+msgstr "Passed"
+
+#: .\bills\models.py:116
+msgid "Rejected"
+msgstr "Rejected"
+
+#: .\bills\models.py:117
+msgid "Amended"
+msgstr "Amended"
+
+#: .\bills\models.py:118
+msgid "Withdrawn"
+msgstr "Withdrawn"
+
+#: .\bills\models.py:119
+msgid "Other"
+msgstr "Other"
+
+#: .\bills\models.py:136
+msgid "Kiswahili"
+msgstr "Kiswahili"
+
+#: .\bills\models.py:137
+msgid "Sheng"
+msgstr "Sheng"
+
+#: .\bills\models.py:191
+msgid "Sent"
+msgstr "Sent"
+
+#: .\bills\models.py:192 .\payments\models.py:19
+msgid "Failed"
+msgstr "Failed"
+
+#: .\bills\models.py:193
+msgid "Skipped"
+msgstr "Skipped"
+
+#: .\bills\models.py:196
+msgid "USSD view summary"
+msgstr "USSD view summary"
+
+#: .\bills\models.py:197
+msgid "New bill notification"
+msgstr "New bill notification"
+
+#: .\bills\models.py:198
+msgid "Bill outcome update"
+msgstr "Bill outcome update"
+
+#: .\bills\services\localization.py:53
+#, python-format
+msgid ""
+"Translation for this bill is not available in %(lang)s yet. Showing English "
+"version."
+msgstr "Translation for this bill is not available in %(lang)s yet. Showing English version."
+
+#: .\core\templates\core\base.html:7
+msgid "Voiced | The Nation is Talking"
+msgstr "Voiced | The Nation is Talking"
+
+#: .\core\templates\core\base.html:65 .\core\templates\core\base.html:165
+msgid "Bills"
+msgstr "Bills"
+
+#: .\core\templates\core\base.html:66 .\core\templates\core\base.html:166
+#: .\core\templates\core\base.html:240
+msgid "Discussions"
+msgstr "Discussions"
+
+#: .\core\templates\core\base.html:99
+msgid "Verified Citizen"
+msgstr "Verified Citizen"
+
+#: .\core\templates\core\base.html:113 .\core\templates\core\base.html:175
+msgid "Profile & Preferences"
+msgstr "Profile & Preferences"
+
+#: .\core\templates\core\base.html:125
+msgid "Log Out"
+msgstr "Log Out"
+
+#: .\core\templates\core\base.html:131
+msgid "Log In"
+msgstr "Log In"
+
+#: .\core\templates\core\base.html:132
+msgid "Register"
+msgstr "Register"
+
+#: .\core\templates\core\base.html:158
+msgid "Menu"
+msgstr "Menu"
+
+#: .\core\templates\core\base.html:179
+msgid "Language"
+msgstr "Language"
+
+#: .\core\templates\core\base.html:197
+msgid "Feature Phone Access"
+msgstr "Feature Phone Access"
+
+#: .\core\templates\core\base.html:205
+msgid "LOG OUT"
+msgstr "LOG OUT"
+
+#: .\core\templates\core\base.html:210
+msgid "LOG IN"
+msgstr "LOG IN"
+
+#: .\core\templates\core\base.html:211
+msgid "REGISTER"
+msgstr "REGISTER"
+
+#: .\core\templates\core\base.html:233
+msgid ""
+"Translating complex government legislation into Sheng, Swahili, and English "
+"so every citizen can be heard."
+msgstr "Translating complex government legislation into Sheng, Swahili, and English so every citizen can be heard."
+
+#: .\core\templates\core\base.html:237
+msgid "Explore"
+msgstr "Explore"
+
+#: .\core\templates\core\base.html:239
+msgid "Active Bills"
+msgstr "Active Bills"
+
+#: .\core\templates\core\base.html:241
+msgid "About Us"
+msgstr "About Us"
+
+#: .\core\templates\core\base.html:246
+msgid "Legal"
+msgstr "Legal"
+
+#: .\core\templates\core\base.html:248
+msgid "Privacy Policy"
+msgstr "Privacy Policy"
+
+#: .\core\templates\core\base.html:249
+msgid "Terms of Service"
+msgstr "Terms of Service"
+
+#: .\core\templates\core\base.html:254
+msgid "Connect"
+msgstr "Connect"
+
+#: .\core\templates\core\base.html:266
+msgid "Voiced Kenya. All rights reserved."
+msgstr "Voiced Kenya. All rights reserved."
+
+#: .\core\templates\core\base.html:350
+msgid "Live Update"
+msgstr "Live Update"
+
+#: .\core\templates\core\base.html:353
+msgid "View Analysis"
+msgstr "View Analysis"
+
+#: .\core\templates\core\bill_detail.html:27
+msgid "This bill closed on"
+msgstr "This bill closed on"
+
+#: .\core\templates\core\bill_detail.html:27
+msgid "Voting is no longer active."
+msgstr "Voting is no longer active."
+
+#: .\core\templates\core\bill_detail.html:35
+#: .\notifications\templates\notifications\notification_list.html:76
+msgid "Close"
+msgstr "Close"
+
+#: .\core\templates\core\bill_detail.html:48
+msgid "Back to Active Bills"
+msgstr "Back to Active Bills"
+
+#: .\core\templates\core\bill_detail.html:48
+msgid "Back"
+msgstr "Back"
+
+#: .\core\templates\core\bill_detail.html:51
+#: .\core\templates\core\bill_list.html:94
+#: .\core\templates\core\bill_list.html:135
+#: .\core\templates\core\discussion_list.html:70
+#: .\core\templates\core\discussion_list.html:113
+msgid "Views"
+msgstr "Views"
+
+#: .\core\templates\core\bill_detail.html:58
+msgid "Participation Ended"
+msgstr "Participation Ended"
+
+#: .\core\templates\core\bill_detail.html:60
+msgid "Official Policy"
+msgstr "Official Policy"
+
+#: .\core\templates\core\bill_detail.html:69
+msgid "Read PDF"
+msgstr "Read PDF"
+
+#: .\core\templates\core\bill_detail.html:73
+msgid "View Discussion"
+msgstr "View Discussion"
+
+#: .\core\templates\core\bill_detail.html:73
+msgid "Live Chat"
+msgstr "Live Chat"
+
+#: .\core\templates\core\bill_detail.html:87
+msgid "Summary"
+msgstr "Summary"
+
+#: .\core\templates\core\bill_detail.html:98
+msgid "Analysis & Implications"
+msgstr "Analysis & Implications"
+
+#: .\core\templates\core\bill_detail.html:108
+msgid "Affected Groups"
+msgstr "Affected Groups"
+
+#: .\core\templates\core\bill_detail.html:123
+msgid "Participation"
+msgstr "Participation"
+
+#: .\core\templates\core\bill_detail.html:128
+msgid "Live Results"
+msgstr "Live Results"
+
+#: .\core\templates\core\bill_detail.html:133
+msgid "Vote receipt generated"
+msgstr "Vote receipt generated"
+
+#: .\core\templates\core\bill_detail.html:136
+msgid "Copy"
+msgstr "Copy"
+
+#: .\core\templates\core\bill_detail.html:137
+msgid "Verify Receipt"
+msgstr "Verify Receipt"
+
+#: .\core\templates\core\bill_detail.html:144
+msgid ""
+"Your vote was recorded but cannot be included in official documentation to "
+"Parliament unless you verify."
+msgstr "Your vote was recorded but cannot be included in official documentation to Parliament unless you verify."
+
+#: .\core\templates\core\bill_detail.html:146
+msgid ""
+"If you vote, your vote will be included in the community pulse but not in "
+"official documentation to Parliament."
+msgstr "If you vote, your vote will be included in the community pulse but not in official documentation to Parliament."
+
+#: .\core\templates\core\bill_detail.html:150
+msgid "Verify"
+msgstr "Verify"
+
+#: .\core\templates\core\bill_detail.html:156
+msgid "Verified Kenyan Citizens have officially voted on this bill."
+msgstr "Verified Kenyan Citizens have officially voted on this bill."
+
+#: .\core\templates\core\bill_detail.html:162
+msgid "You participated in this pulse."
+msgstr "You participated in this pulse."
+
+#: .\core\templates\core\bill_detail.html:162
+msgid "Your"
+msgstr "Your"
+
+#: .\core\templates\core\bill_detail.html:162
+msgid "input was part of"
+msgstr "input was part of"
+
+#: .\core\templates\core\bill_detail.html:162
+msgid "community voices."
+msgstr "community voices."
+
+#: .\core\templates\core\bill_detail.html:170
+msgid "Final Outcome"
+msgstr "Final Outcome"
+
+#: .\core\templates\core\bill_detail.html:178
+msgid "Final Consensus Recorded"
+msgstr "Final Consensus Recorded"
+
+#: .\core\templates\core\bill_detail.html:179
+msgid ""
+"Voting is disabled as this bill has passed the public participation deadline."
+msgstr "Voting is disabled as this bill has passed the public participation deadline."
+
+#: .\core\templates\core\bill_detail.html:184
+msgid "Your Stance"
+msgstr "Your Stance"
+
+#: .\core\templates\core\bill_detail.html:192
+#: .\core\templates\core\bill_detail.html:443
+msgid "Read more"
+msgstr "Read more"
+
+#: .\core\templates\core\bill_detail.html:196
+msgid "Change My Vote"
+msgstr "Change My Vote"
+
+#: .\core\templates\core\bill_detail.html:205
+#: .\core\templates\core\home.html:85
+msgid "Support"
+msgstr "Support"
+
+#: .\core\templates\core\bill_detail.html:208
+#: .\core\templates\core\home.html:86
+msgid "Oppose"
+msgstr "Oppose"
+
+#: .\core\templates\core\bill_detail.html:214
+msgid "Reason"
+msgstr "Reason"
+
+#: .\core\templates\core\bill_detail.html:217
+msgid "Why this stance?"
+msgstr "Why this stance?"
+
+#: .\core\templates\core\bill_detail.html:218
+msgid "Limit reached"
+msgstr "Limit reached"
+
+#: .\core\templates\core\bill_detail.html:221
+msgid "Submit Vote"
+msgstr "Submit Vote"
+
+#: .\core\templates\core\bill_detail.html:222
+msgid "Cancel"
+msgstr "Cancel"
+
+#: .\core\templates\core\bill_detail.html:228
+msgid "Sign In to Participate"
+msgstr "Sign In to Participate"
+
+#: .\core\templates\core\bill_detail.html:242
+msgid "Participation Closed"
+msgstr "Participation Closed"
+
+#: .\core\templates\core\bill_detail.html:243
+msgid "The deadline for public memoranda was"
+msgstr "The deadline for public memoranda was"
+
+#: .\core\templates\core\bill_detail.html:243
+msgid "You can still download the final AI-generated sentiment report below."
+msgstr "You can still download the final AI-generated sentiment report below."
+
+#: .\core\templates\core\bill_detail.html:246
+msgid "Download Collective Report"
+msgstr "Download Collective Report"
+
+#: .\core\templates\core\bill_detail.html:253
+msgid "Citizen Toolbox Locked"
+msgstr "Citizen Toolbox Locked"
+
+#: .\core\templates\core\bill_detail.html:254
+msgid ""
+"Login to your account to unlock AI-powered petition drafting and collective "
+"sentiment reports."
+msgstr "Login to your account to unlock AI-powered petition drafting and collective sentiment reports."
+
+#: .\core\templates\core\bill_detail.html:256
+msgid "Sign In to Unlock"
+msgstr "Sign In to Unlock"
+
+#: .\core\templates\core\bill_detail.html:262
+msgid "Participation Required"
+msgstr "Participation Required"
+
+#: .\core\templates\core\bill_detail.html:263
+msgid ""
+"Cast your vote and provide a reason to unlock AI submission drafting and "
+"download the full analysis."
+msgstr "Cast your vote and provide a reason to unlock AI submission drafting and download the full analysis."
+
+#: .\core\templates\core\bill_detail.html:265
+msgid "Cast Your Vote Now"
+msgstr "Cast Your Vote Now"
+
+#: .\core\templates\core\bill_detail.html:272
+msgid "National Pulse Report"
+msgstr "National Pulse Report"
+
+#: .\core\templates\core\bill_detail.html:275
+msgid "Checking report readiness..."
+msgstr "Checking report readiness..."
+
+#: .\core\templates\core\bill_detail.html:278
+msgid "Download Report"
+msgstr "Download Report"
+
+#: .\core\templates\core\bill_detail.html:284
+msgid "AI Legal Draft"
+msgstr "AI Legal Draft"
+
+#: .\core\templates\core\bill_detail.html:287
+msgid ""
+"Generate a formal memorandum draft to Parliament based on your submitted "
+"position."
+msgstr "Generate a formal memorandum draft to Parliament based on your submitted position."
+
+#: .\core\templates\core\bill_detail.html:289
+msgid "Generate Draft"
+msgstr "Generate Draft"
+
+#: .\core\templates\core\bill_detail.html:298
+msgid "Official Submission Draft"
+msgstr "Official Submission Draft"
+
+#: .\core\templates\core\bill_detail.html:319
+msgid "Spread the Word"
+msgstr "Spread the Word"
+
+#: .\core\templates\core\bill_detail.html:320
+msgid "Legislation affects everyone. Send this analysis to your circles."
+msgstr "Legislation affects everyone. Send this analysis to your circles."
+
+#: .\core\templates\core\bill_detail.html:324
+msgid "Share Analysis"
+msgstr "Share Analysis"
+
+#: .\core\templates\core\bill_detail.html:329
+#: .\core\templates\core\bill_detail.html:441
+msgid "Copy Link"
+msgstr "Copy Link"
+
+#: .\core\templates\core\bill_detail.html:335
+msgid "Share to Baraza"
+msgstr "Share to Baraza"
+
+#: .\core\templates\core\bill_detail.html:336
+msgid ""
+"Download a printable outreach flyer for meetings and public spaces, or send "
+"a concise WhatsApp call-to-action."
+msgstr "Download a printable outreach flyer for meetings and public spaces, or send a concise WhatsApp call-to-action."
+
+#: .\core\templates\core\bill_detail.html:348
+msgid "Poster includes QR + USSD fallback for offline participation."
+msgstr "Poster includes QR + USSD fallback for offline participation."
+
+#: .\core\templates\core\bill_detail.html:433
+msgid "Deadline Passed"
+msgstr "Deadline Passed"
+
+#: .\core\templates\core\bill_detail.html:434
+msgid "remaining"
+msgstr "remaining"
+
+#: .\core\templates\core\bill_detail.html:435
+#: .\core\templates\core\bill_list.html:90
+#: .\core\templates\core\bill_list.html:134
+msgid "Votes"
+msgstr "Votes"
+
+#: .\core\templates\core\bill_detail.html:436
+msgid "Vote recorded successfully."
+msgstr "Vote recorded successfully."
+
+#: .\core\templates\core\bill_detail.html:437
+msgid "Error recording vote"
+msgstr "Error recording vote"
+
+#: .\core\templates\core\bill_detail.html:438
+msgid "An error occurred."
+msgstr "An error occurred."
+
+#: .\core\templates\core\bill_detail.html:439
+msgid "Copied"
+msgstr "Copied"
+
+#: .\core\templates\core\bill_detail.html:440
+msgid "LINK COPIED!"
+msgstr "LINK COPIED!"
+
+#: .\core\templates\core\bill_detail.html:442
+msgid "Hide reason"
+msgstr "Hide reason"
+
+#: .\core\templates\core\bill_list.html:8
+msgid "This bill has been moved to the national archives."
+msgstr "This bill has been moved to the national archives."
+
+#: .\core\templates\core\bill_list.html:13
+msgid "Legislation Tracker"
+msgstr "Legislation Tracker"
+
+#: .\core\templates\core\bill_list.html:14
+msgid "Monitoring public participation and legislative progress."
+msgstr "Monitoring public participation and legislative progress."
+
+#: .\core\templates\core\bill_list.html:19
+#: .\core\templates\core\bill_list.html:79
+#: .\core\templates\core\bill_list.html:133
+#: .\core\templates\core\discussion_list.html:14
+msgid "Ongoing"
+msgstr "Ongoing"
+
+#: .\core\templates\core\bill_list.html:21
+#: .\core\templates\core\discussion_list.html:16
+msgid "All"
+msgstr "All"
+
+#: .\core\templates\core\bill_list.html:26
+msgid "Filter current view..."
+msgstr "Filter current view..."
+
+#: .\core\templates\core\bill_list.html:39
+msgid "High Engagement"
+msgstr "High Engagement"
+
+#: .\core\templates\core\bill_list.html:48
+msgid "Active Now"
+msgstr "Active Now"
+
+#: .\core\templates\core\bill_list.html:54
+msgid "Readers"
+msgstr "Readers"
+
+#: .\core\templates\core\bill_list.html:56
+#: .\core\templates\core\discussion_list.html:80
+#: .\core\templates\core\discussion_list.html:110
+msgid "Join Debate"
+msgstr "Join Debate"
+
+#: .\core\templates\core\bill_list.html:66
+#: .\core\templates\core\bill_list.html:121
+msgid "Active Participation"
+msgstr "Active Participation"
+
+#: .\core\templates\core\bill_list.html:67
+msgid "Showing Results"
+msgstr "Showing Results"
+
+#: .\core\templates\core\bill_list.html:98
+#: .\core\templates\core\bill_list.html:136
+msgid "View Results"
+msgstr "View Results"
+
+#: .\core\templates\core\bill_list.html:100
+#: .\core\templates\core\bill_list.html:137
+msgid "Participate Now"
+msgstr "Participate Now"
+
+#: .\core\templates\core\bill_list.html:109
+#: .\core\templates\core\bill_list.html:130
+msgid "No Registry Found"
+msgstr "No Registry Found"
+
+#: .\core\templates\core\bill_list.html:110
+#: .\core\templates\core\bill_list.html:131
+msgid "Try adjusting your filters or search term"
+msgstr "Try adjusting your filters or search term"
+
+#: .\core\templates\core\bill_list.html:112
+msgid "Clear All Filters"
+msgstr "Clear All Filters"
+
+#: .\core\templates\core\bill_list.html:122
+#: .\core\templates\core\discussion_list.html:44
+#: .\core\templates\core\discussion_list.html:107
+msgid "Archive"
+msgstr "Archive"
+
+#: .\core\templates\core\bill_list.html:123
+msgid "Complete Registry"
+msgstr "Complete Registry"
+
+#: .\core\templates\core\bill_list.html:124
+#: .\core\templates\core\discussion_list.html:34
+#: .\core\templates\core\discussion_list.html:105
+msgid "Showing"
+msgstr "Showing"
+
+#: .\core\templates\core\bill_list.html:125
+msgid "Results"
+msgstr "Results"
+
+#: .\core\templates\core\bill_list.html:126
+msgid "No Closed Bills Yet"
+msgstr "No Closed Bills Yet"
+
+#: .\core\templates\core\bill_list.html:127
+msgid "No bills have closed in the last 30 days"
+msgstr "No bills have closed in the last 30 days"
+
+#: .\core\templates\core\bill_list.html:128
+msgid "No Results Found In This Category"
+msgstr "No Results Found In This Category"
+
+#: .\core\templates\core\bill_list.html:129
+msgid "Try another keyword or clear all filters"
+msgstr "Try another keyword or clear all filters"
+
+#: .\core\templates\core\discussion_list.html:8
+msgid "Public Debates"
+msgstr "Public Debates"
+
+#: .\core\templates\core\discussion_list.html:9
+msgid "Where the streets meet the law. Join active perspectives."
+msgstr "Where the streets meet the law. Join active perspectives."
+
+#: .\core\templates\core\discussion_list.html:21
+msgid "Search by title..."
+msgstr "Search by title..."
+
+#: .\core\templates\core\discussion_list.html:31
+msgid "Live Perspectives"
+msgstr "Live Perspectives"
+
+#: .\core\templates\core\discussion_list.html:34
+#: .\core\templates\core\discussion_list.html:106
+msgid "Debates"
+msgstr "Debates"
+
+#: .\core\templates\core\discussion_list.html:49
+#: .\core\templates\core\discussion_list.html:114
+msgid "Trending"
+msgstr "Trending"
+
+#: .\core\templates\core\discussion_list.html:63
+#: .\core\templates\core\discussion_list.html:112
+msgid "Perspectives"
+msgstr "Perspectives"
+
+#: .\core\templates\core\discussion_list.html:78
+#: .\core\templates\core\discussion_list.html:109
+msgid "Read Transcript"
+msgstr "Read Transcript"
+
+#: .\core\templates\core\discussion_list.html:85
+#: .\core\templates\core\discussion_list.html:111
+msgid "Sign in to join"
+msgstr "Sign in to join"
+
+#: .\core\templates\core\discussion_list.html:96
+msgid "No Active Debates"
+msgstr "No Active Debates"
+
+#: .\core\templates\core\home.html:33
+msgid "The Nation"
+msgstr "The Nation"
+
+#: .\core\templates\core\home.html:33
+msgid "is Talking."
+msgstr "is Talking."
+
+#: .\core\templates\core\home.html:34
+msgid ""
+"Voices are moving the needle. Join the largest community debating Kenyan "
+"legislation in Sheng, Swahili, and English."
+msgstr "Voices are moving the needle. Join the largest community debating Kenyan legislation in Sheng, Swahili, and English."
+
+#: .\core\templates\core\home.html:36
+msgid "Explore Bills"
+msgstr "Explore Bills"
+
+#: .\core\templates\core\home.html:38
+msgid "Find Discussions"
+msgstr "Find Discussions"
+
+#: .\core\templates\core\home.html:40
+msgid "Join Us"
+msgstr "Join Us"
+
+#: .\core\templates\core\home.html:46
+msgid "No Internet?"
+msgstr "No Internet?"
+
+#: .\core\templates\core\home.html:46
+msgid "No Problem."
+msgstr "No Problem."
+
+#: .\core\templates\core\home.html:47
+msgid ""
+"Access every bill summary and cast your vote via USSD. Empowering the "
+"streets with data."
+msgstr "Access every bill summary and cast your vote via USSD. Empowering the streets with data."
+
+#: .\core\templates\core\home.html:54
+msgid "Your Language,"
+msgstr "Your Language,"
+
+#: .\core\templates\core\home.html:54
+msgid "Your Voice."
+msgstr "Your Voice."
+
+#: .\core\templates\core\home.html:55
+msgid ""
+"We use AI to translate complex laws into Sheng and Swahili instantly. Making "
+"public participation a reality for every Mwananchi."
+msgstr "We use AI to translate complex laws into Sheng and Swahili instantly. Making public participation a reality for every Mwananchi."
+
+#: .\core\templates\core\home.html:57
+msgid "View Bills"
+msgstr "View Bills"
+
+#: .\core\templates\core\home.html:71
+msgid "Trending Bills"
+msgstr "Trending Bills"
+
+#: .\core\templates\core\home.html:72
+msgid "View All Bills"
+msgstr "View All Bills"
+
+#: .\core\templates\core\home.html:89
+msgid "Cast Vote"
+msgstr "Cast Vote"
+
+#: .\core\templates\core\home.html:93
+msgid "Sign in to vote"
+msgstr "Sign in to vote"
+
+#: .\core\templates\core\home.html:102
+msgid "No Active Bills Found"
+msgstr "No Active Bills Found"
+
+#: .\core\templates\core\home.html:110
+msgid "Voiced on the Go"
+msgstr "Voiced on the Go"
+
+#: .\core\templates\core\home.html:111
+msgid ""
+"We've partnered with major telcos to ensure you don't need a smartphone to "
+"be a part of the democracy. Use our USSD service for free."
+msgstr "We've partnered with major telcos to ensure you don't need a smartphone to be a part of the democracy. Use our USSD service for free."
+
+#: .\core\templates\core\home.html:114
+msgid "Dial Now"
+msgstr "Dial Now"
+
+#: .\core\templates\core\home.html:121
+msgid "Live Discussions"
+msgstr "Live Discussions"
+
+#: .\core\templates\core\home.html:122
+msgid "Join Debates"
+msgstr "Join Debates"
+
+#: .\core\templates\core\home.html:130
+msgid "Live Now"
+msgstr "Live Now"
+
+#: .\core\templates\core\home.html:137
+msgid "Join Chat"
+msgstr "Join Chat"
+
+#: .\core\templates\core\home.html:142
+msgid "Sign in to join chat"
+msgstr "Sign in to join chat"
+
+#: .\core\templates\core\home.html:151
+msgid "No Live Discussions"
+msgstr "No Live Discussions"
+
+#: .\notifications\templates\notifications\notification_list.html:8
+msgid "Your Alerts"
+msgstr "Your Alerts"
+
+#: .\notifications\templates\notifications\notification_list.html:9
+msgid "Stay updated on legislative shifts and community activity."
+msgstr "Stay updated on legislative shifts and community activity."
+
+#: .\notifications\templates\notifications\notification_list.html:15
+msgid "Mark All as Read"
+msgstr "Mark All as Read"
+
+#: .\notifications\templates\notifications\notification_list.html:24
+msgid "ago"
+msgstr "ago"
+
+#: .\notifications\templates\notifications\notification_list.html:54
+msgid "Silence is Golden"
+msgstr "Silence is Golden"
+
+#: .\notifications\templates\notifications\notification_list.html:75
+msgid "Go to Page"
+msgstr "Go to Page"
+
+#: .\payments\models.py:12
+msgid "Top-up"
+msgstr "Top-up"
+
+#: .\payments\models.py:13
+msgid "Deduction"
+msgstr "Deduction"
+
+#: .\payments\models.py:14
+msgid "Refund"
+msgstr "Refund"
+
+#: .\payments\models.py:17
+msgid "Pending"
+msgstr "Pending"
+
+#: .\payments\models.py:18
+msgid "Completed"
+msgstr "Completed"
+
+#: .\payments\models.py:22
+msgid "Report / PDF"
+msgstr "Report / PDF"
+
+#: .\payments\models.py:23
+msgid "Legal draft"
+msgstr "Legal draft"

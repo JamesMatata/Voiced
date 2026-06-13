@@ -1,23 +1,24 @@
 {% extends 'core/base.html' %}
+{% load i18n %}
 
 {% block content %}
 <div class="space-y-12">
     <div class="border-b border-zinc-300 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-            <h1 class="text-4xl font-black uppercase tracking-tighter text-zinc-900">Public Debates</h1>
-            <p class="text-zinc-600 font-medium mt-2 italic">Where the streets meet the law. Join active perspectives.</p>
+            <h1 class="text-4xl font-black uppercase tracking-tighter text-zinc-900">{% trans "Public Debates" %}</h1>
+            <p class="text-zinc-600 font-medium mt-2 italic">{% trans "Where the streets meet the law. Join active perspectives." %}</p>
         </div>
 
         <div class="flex flex-col gap-4 w-full md:w-auto">
             <div class="flex bg-zinc-100 p-1 rounded-md self-start md:self-end">
-                <button onclick="applyFilter('ongoing')" id="filter-ongoing" class="filter-btn px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded bg-white text-black transition">Ongoing</button>
-                <button onclick="applyFilter('closed')" id="filter-closed" class="filter-btn px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded text-zinc-500 hover:text-black transition">Closed</button>
-                <button onclick="applyFilter('all')" id="filter-all" class="filter-btn px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded text-zinc-500 hover:text-black transition">All</button>
+                <button onclick="applyFilter('ongoing')" id="filter-ongoing" class="filter-btn px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded bg-white text-black transition">{% trans "Ongoing" %}</button>
+                <button onclick="applyFilter('closed')" id="filter-closed" class="filter-btn px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded text-zinc-500 hover:text-black transition">{% trans "Closed" %}</button>
+                <button onclick="applyFilter('all')" id="filter-all" class="filter-btn px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded text-zinc-500 hover:text-black transition">{% trans "All" %}</button>
             </div>
 
             <div class="relative w-full md:w-96">
                 <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-xl"></i>
-                <input type="text" id="discussionSearch" placeholder="Search by title..."
+                <input type="text" id="discussionSearch" placeholder="{% trans 'Search by title...' %}"
                        class="w-full pl-10 pr-4 py-3 bg-white border border-zinc-300 rounded-md focus:outline-none focus:border-black font-bold uppercase text-xs tracking-widest transition">
             </div>
         </div>
@@ -27,10 +28,10 @@
         <div class="flex items-center justify-between mb-8">
             <div class="flex items-center gap-2">
                 <span id="live-indicator" class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                <h2 class="text-xl font-black uppercase tracking-tighter">Live Perspectives</h2>
+                <h2 class="text-xl font-black uppercase tracking-tighter">{% trans "Live Perspectives" %}</h2>
             </div>
             <div id="resultCount" class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                Showing {{ discussions|length }} Debates
+                {% trans "Showing" %} {{ discussions|length }} {% trans "Debates" %}
             </div>
         </div>
 
@@ -40,12 +41,12 @@
                 <a href="{% url 'bill_chat' bill.id %}" class="block mb-6">
                     <div class="flex justify-between items-start mb-4">
                         {% if bill.current_status == 'CL' %}
-                            <span class="bg-zinc-100 text-zinc-500 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">Archive</span>
+                            <span class="bg-zinc-100 text-zinc-500 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">{% trans "Archive" %}</span>
                         {% else %}
-                            <span class="bg-green-50 text-green-700 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">Live</span>
+                            <span class="bg-green-50 text-green-700 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">{% trans "Live" %}</span>
                         {% endif %}
                         <div class="flex items-center gap-1.5 text-[9px] font-black text-red-600 uppercase">
-                            <i class="ph-fill ph-trend-up"></i> Trending
+                            <i class="ph-fill ph-trend-up"></i> {% trans "Trending" %}
                         </div>
                     </div>
 
@@ -59,14 +60,14 @@
                                 <i class="ph ph-chat-centered-text text-base"></i>
                                 <span class="text-lg font-black leading-none">{{ bill.msg_count }}</span>
                             </div>
-                            <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Perspectives</span>
+                            <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-1">{% trans "Perspectives" %}</span>
                         </div>
                         <div class="flex flex-col">
                             <div class="flex items-center gap-1.5 text-zinc-400">
                                 <i class="ph ph-eye text-base"></i>
                                 <span class="text-lg font-black leading-none">{{ bill.view_count }}</span>
                             </div>
-                            <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Views</span>
+                            <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-1">{% trans "Views" %}</span>
                         </div>
                     </div>
                 </a>
@@ -74,14 +75,14 @@
                 <div class="mt-auto pt-6 border-t border-zinc-100">
                     {% if user.is_authenticated %}
                         {% if bill.current_status == 'CL' %}
-                            <a href="{% url 'bill_chat' bill.id %}" class="block w-full text-center border-2 border-zinc-900 text-zinc-900 text-[10px] font-black py-3 rounded-md hover:bg-zinc-900 hover:text-white transition uppercase tracking-widest">Read Transcript →</a>
+                            <a href="{% url 'bill_chat' bill.id %}" class="block w-full text-center border-2 border-zinc-900 text-zinc-900 text-[10px] font-black py-3 rounded-md hover:bg-zinc-900 hover:text-white transition uppercase tracking-widest">{% trans "Read Transcript" %} →</a>
                         {% else %}
-                            <a href="{% url 'bill_chat' bill.id %}" class="block w-full text-center bg-zinc-900 text-white text-[10px] font-black py-3 rounded-md hover:bg-black transition uppercase tracking-widest">Join Debate</a>
+                            <a href="{% url 'bill_chat' bill.id %}" class="block w-full text-center bg-zinc-900 text-white text-[10px] font-black py-3 rounded-md hover:bg-black transition uppercase tracking-widest">{% trans "Join Debate" %}</a>
                         {% endif %}
                     {% else %}
                         <div class="bg-zinc-50 border border-dashed border-zinc-200 rounded-md p-2 text-center">
                             <a href="{% url 'login' %}?next={% url 'bill_chat' bill.id %}" class="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center justify-center gap-2 py-1 transition hover:text-black">
-                                <i class="ph ph-lock-key text-sm"></i> Sign in to join
+                                <i class="ph ph-lock-key text-sm"></i> {% trans "Sign in to join" %}
                             </a>
                         </div>
                     {% endif %}
@@ -92,7 +93,7 @@
 
         <div id="noResults" class="hidden py-24 border-2 border-dashed border-zinc-200 rounded-md flex flex-col items-center justify-center text-zinc-400 bg-zinc-50/50">
             <i class="ph ph-chat-centered-dots text-7xl mb-4 opacity-20"></i>
-            <p class="font-black uppercase tracking-[0.2em] text-sm text-zinc-500">No Active Debates</p>
+            <p class="font-black uppercase tracking-[0.2em] text-sm text-zinc-500">{% trans "No Active Debates" %}</p>
         </div>
     </section>
 </div>
@@ -100,6 +101,18 @@
 <script>
     let currentFilter = 'ongoing';
     const isAuth = {{ user.is_authenticated|yesno:"true,false" }};
+    const I18N = {
+        showing: "{% trans 'Showing' %}",
+        debates: "{% trans 'Debates' %}",
+        archive: "{% trans 'Archive' %}",
+        live: "{% trans 'Live' %}",
+        readTranscript: "{% trans 'Read Transcript' %}",
+        joinDebate: "{% trans 'Join Debate' %}",
+        signInToJoin: "{% trans 'Sign in to join' %}",
+        perspectives: "{% trans 'Perspectives' %}",
+        views: "{% trans 'Views' %}",
+        trending: "{% trans 'Trending' %}",
+    };
 
     async function applyFilter(filterType) {
         currentFilter = filterType;
@@ -134,7 +147,7 @@
         const countDisplay = document.getElementById('resultCount');
 
         grid.innerHTML = '';
-        countDisplay.innerText = `Showing ${discussions.length} Debates`;
+        countDisplay.innerText = `${I18N.showing} ${discussions.length} ${I18N.debates}`;
 
         if (discussions.length === 0) {
             grid.classList.add('hidden');
@@ -147,12 +160,12 @@
 
         discussions.forEach(bill => {
             const statusBadge = bill.status === 'CL'
-                ? '<span class="bg-zinc-100 text-zinc-500 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">Archive</span>'
-                : '<span class="bg-green-50 text-green-700 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">Live</span>';
+                ? `<span class="bg-zinc-100 text-zinc-500 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">${I18N.archive}</span>`
+                : `<span class="bg-green-50 text-green-700 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">${I18N.live}</span>`;
 
             const actionBtn = bill.status === 'CL'
-                ? `<a href="${bill.chat_url}" class="block w-full text-center border-2 border-zinc-900 text-zinc-900 text-[10px] font-black py-3 rounded-md hover:bg-zinc-900 hover:text-white transition uppercase tracking-widest">Read Transcript →</a>`
-                : `<a href="${bill.chat_url}" class="block w-full text-center bg-zinc-900 text-white text-[10px] font-black py-3 rounded-md hover:bg-black transition uppercase tracking-widest">Join Debate</a>`;
+                ? `<a href="${bill.chat_url}" class="block w-full text-center border-2 border-zinc-900 text-zinc-900 text-[10px] font-black py-3 rounded-md hover:bg-zinc-900 hover:text-white transition uppercase tracking-widest">${I18N.readTranscript} →</a>`
+                : `<a href="${bill.chat_url}" class="block w-full text-center bg-zinc-900 text-white text-[10px] font-black py-3 rounded-md hover:bg-black transition uppercase tracking-widest">${I18N.joinDebate}</a>`;
 
             const card = `
                 <div class="discussion-card bg-white border border-zinc-200 p-8 rounded-md hover:border-black transition-all duration-300 flex flex-col justify-between h-full group">
@@ -160,7 +173,7 @@
                         <div class="flex justify-between items-start mb-4">
                             ${statusBadge}
                             <div class="flex items-center gap-1.5 text-[9px] font-black text-red-600 uppercase">
-                                <i class="ph-fill ph-trend-up"></i> Trending
+                                <i class="ph-fill ph-trend-up"></i> ${I18N.trending}
                             </div>
                         </div>
                         <h3 class="font-black text-lg text-zinc-900 group-hover:text-red-600 leading-tight mb-4 transition-colors">${bill.title}</h3>
@@ -171,19 +184,19 @@
                                     <i class="ph ph-chat-centered-text text-base"></i>
                                     <span class="text-lg font-black leading-none">${bill.msg_count}</span>
                                 </div>
-                                <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Perspectives</span>
+                                <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-1">${I18N.perspectives}</span>
                             </div>
                             <div class="flex flex-col">
                                 <div class="flex items-center gap-1.5 text-zinc-400">
                                     <i class="ph ph-eye text-base"></i>
                                     <span class="text-lg font-black leading-none">${bill.view_count}</span>
                                 </div>
-                                <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Views</span>
+                                <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-1">${I18N.views}</span>
                             </div>
                         </div>
                     </a>
                     <div class="mt-auto pt-6 border-t border-zinc-100">
-                        ${isAuth ? actionBtn : `<div class="bg-zinc-50 border border-dashed border-zinc-200 rounded-md p-2 text-center"><a href="/auth/login/?next=${bill.chat_url}" class="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center justify-center gap-2 py-1 transition hover:text-black"><i class="ph ph-lock-key text-sm"></i> Sign in to join</a></div>`}
+                        ${isAuth ? actionBtn : `<div class="bg-zinc-50 border border-dashed border-zinc-200 rounded-md p-2 text-center"><a href="/auth/login/?next=${bill.chat_url}" class="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center justify-center gap-2 py-1 transition hover:text-black"><i class="ph ph-lock-key text-sm"></i> ${I18N.signInToJoin}</a></div>`}
                     </div>
                 </div>`;
             grid.insertAdjacentHTML('beforeend', card);

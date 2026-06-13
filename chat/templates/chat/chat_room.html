@@ -53,8 +53,13 @@
             {% for msg in messages %}
                 <div class="flex w-full {% if msg.user.id == user_id %}justify-end{% else %}justify-start{% endif %} group" id="msg-{{ msg.id }}">
                     <div class="max-w-[92%] md:max-w-[70%] lg:max-w-[60%]">
-                        <div class="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 px-1">
-                            {% if msg.user.id == user_id %}You{% else %}{{ msg.get_display_alias }}{% endif %}
+                        <div class="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 px-1 flex items-center gap-1.5">
+                            <span>{% if msg.user.id == user_id %}You{% else %}{{ msg.get_display_alias }}{% endif %}</span>
+                            {% if msg.user.profile.is_kenyan %}
+                            <span class="inline-flex items-center gap-1 text-[8px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">
+                                <i class="ph ph-shield-check text-[10px]"></i> Verified Citizen
+                            </span>
+                            {% endif %}
                         </div>
                         <div class="relative p-3 md:p-4 rounded-md border {% if msg.user.id == user_id %}bg-zinc-900 border-zinc-900 text-white{% else %}bg-white border-zinc-200 text-zinc-900{% endif %} shadow-sm">
                             {% if msg.parent_message %}
@@ -291,6 +296,7 @@
                     content: data.content,
                     user_id: myUserId,
                     sender_alias: data.user_alias,
+                    is_verified_citizen: !!data.is_verified_citizen,
                     parent_id: replyingToId,
                     parent_content: data.parent_content
                 });
@@ -373,6 +379,9 @@
         const alignmentClass = isMine ? "justify-end" : "justify-start";
         const bubbleStyle = isMine ? "bg-zinc-900 border-zinc-900 text-white" : "bg-white border-zinc-200 text-zinc-900";
         const aliasDisplay = isMine ? "You" : data.sender_alias;
+        const verifiedChip = data.is_verified_citizen
+            ? `<span class="inline-flex items-center gap-1 text-[8px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5"><i class="ph ph-shield-check text-[10px]"></i> Verified Citizen</span>`
+            : '';
 
         let parentHtml = data.parent_id ? `
             <button onclick="scrollToMessage(${data.parent_id})" class="block w-full text-left mb-3 focus:outline-none">
@@ -391,7 +400,7 @@
             reactionRow += `<button onclick="prepareReply(${data.message_id}, '${data.content.replace(/'/g, "\\'")}')" class="text-[9px] font-black uppercase text-zinc-400 hover:text-zinc-950 transition">Reply</button>`;
         }
 
-        const html = `<div class="flex w-full ${alignmentClass} group" id="msg-${data.message_id}"><div class="max-w-[92%] md:max-w-[70%] lg:max-w-[60%]"><div class="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 px-1">${aliasDisplay}</div><div class="relative p-3 md:p-4 rounded-md border shadow-sm ${bubbleStyle}">${parentHtml}<p class="text-sm md:text-base font-medium leading-relaxed break-words">${data.content}</p></div><div class="flex items-center gap-3 mt-2 px-1">${reactionRow}</div></div></div>`;
+        const html = `<div class="flex w-full ${alignmentClass} group" id="msg-${data.message_id}"><div class="max-w-[92%] md:max-w-[70%] lg:max-w-[60%]"><div class="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1 px-1 flex items-center gap-1.5"><span>${aliasDisplay}</span>${verifiedChip}</div><div class="relative p-3 md:p-4 rounded-md border shadow-sm ${bubbleStyle}">${parentHtml}<p class="text-sm md:text-base font-medium leading-relaxed break-words">${data.content}</p></div><div class="flex items-center gap-3 mt-2 px-1">${reactionRow}</div></div></div>`;
 
         chatMessagesContainer.insertAdjacentHTML('beforeend', html);
         chatLog.scrollTop = chatLog.scrollHeight;

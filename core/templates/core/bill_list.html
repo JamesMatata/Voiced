@@ -1,40 +1,105 @@
 {% extends 'core/base.html' %}
+{% load i18n %}
 
 {% block content %}
-<div class="space-y-12">
+{% trans "Active Participation" as i18n_active_participation %}
+{% trans "Closed Registry" as i18n_closed_registry %}
+{% trans "Complete Database" as i18n_complete_database %}
+{% trans "All Levels" as i18n_all_levels %}
+{% trans "National" as i18n_national %}
+{% trans "County" as i18n_county %}
+{% trans "All Counties" as i18n_all_counties %}
+{% trans "Showing" as i18n_showing %}
+{% trans "results" as i18n_results %}
+{% trans "No Closed Bills Yet" as i18n_no_closed %}
+{% trans "No bills have closed in the last 30 days" as i18n_no_closed_sub %}
+{% trans "No Results Found" as i18n_no_results %}
+{% trans "Try another keyword or clear all filters" as i18n_no_results_sub %}
+{% trans "No Registry Found" as i18n_no_registry %}
+{% trans "Try adjusting your filters or search term" as i18n_no_registry_sub %}
+{% trans "Closed" as i18n_closed %}
+{% trans "Ongoing" as i18n_ongoing %}
+{% trans "Votes" as i18n_votes %}
+{% trans "Views" as i18n_views %}
+{% trans "View Results" as i18n_view_results %}
+{% trans "Participate Now" as i18n_participate_now %}
+{% trans "Summary coming soon." as i18n_summary_soon %}
+<div class="space-y-10 sm:space-y-12">
     {% if request.GET.archived %}
-    <div class="p-4 rounded-md text-xs font-black uppercase tracking-widest border bg-zinc-100 text-zinc-700 border-zinc-300 text-center">
-        This bill has been moved to the national archives.
+    <div class="flex items-center justify-center p-3 rounded-md text-xs font-bold uppercase tracking-wider bg-zinc-100 text-zinc-600 border border-zinc-200">
+        <i class="ph ph-archive text-lg mr-2"></i> {% trans "This bill has been moved to the national archives." %}
     </div>
     {% endif %}
-    <div class="border-b border-zinc-300 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-            <h1 class="text-4xl font-black uppercase tracking-tighter text-zinc-900">Legislation Tracker</h1>
-            <p class="text-zinc-600 font-medium mt-2 italic">Monitoring public participation and legislative progress.</p>
+    
+    <header class="space-y-3 pb-4 border-b border-zinc-200">
+        <h1 class="text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl md:text-[2.5rem] md:leading-tight">{% trans "Legislation Tracker" %}</h1>
+        <p class="max-w-2xl text-sm leading-relaxed text-zinc-500 sm:text-base">{% trans "Monitor public participation and legislative progress. Use the registry filters below to narrow your scope." %}</p>
+    </header>
+
+    <div class="border border-zinc-300 rounded-md bg-white flex flex-col lg:flex-row">
+        
+        <div class="order-4 lg:order-1 flex-1 flex items-center px-4 py-1 h-14 relative group focus-within:bg-zinc-50 transition-colors lg:border-r border-zinc-200">
+            <i class="ph ph-magnifying-glass text-zinc-400 mr-3 text-lg"></i>
+            <input type="search" id="billSearch" name="q" autocomplete="off" placeholder="{% trans 'Search by title or keyword...' %}" value="{{ current_search_query }}"
+                   class="w-full bg-transparent border-none focus:ring-0 p-0 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 placeholder:font-normal appearance-none outline-none">
+            <button type="button" id="clearSearchBtn" onclick="clearAllFilters()" class="hidden absolute right-4 text-xs font-bold text-zinc-400 hover:text-zinc-900 uppercase tracking-widest transition-colors">
+                {% trans "Clear" %}
+            </button>
         </div>
 
-        <div class="flex flex-col gap-4 w-full md:w-auto">
-            <div class="flex bg-zinc-100 p-1 rounded-md self-start md:self-end">
-                <button onclick="applyFilter('ongoing')" id="filter-ongoing" class="filter-btn px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded transition {% if current_status_filter == 'ongoing' %}bg-white text-black{% else %}text-zinc-500 hover:text-black{% endif %}">Ongoing</button>
-                <button onclick="applyFilter('closed')" id="filter-closed" class="filter-btn px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded transition {% if current_status_filter == 'closed' %}bg-white text-black{% else %}text-zinc-500 hover:text-black{% endif %}">Closed</button>
-                <button onclick="applyFilter('all')" id="filter-all" class="filter-btn px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded transition {% if current_status_filter == 'all' %}bg-white text-black{% else %}text-zinc-500 hover:text-black{% endif %}">All</button>
+        <div class="order-1 lg:order-2 lg:w-48 flex items-center px-4 py-1 h-14 relative focus-within:bg-zinc-50 transition-colors border-b lg:border-b-0 lg:border-r border-zinc-200 cursor-pointer" onclick="toggleDropdown('scopeMenu', event)">
+            <i class="ph ph-globe-hemisphere text-zinc-400 mr-2 text-lg"></i>
+            <div class="flex-1 text-sm font-medium text-zinc-700 select-none truncate" id="scopeLabel">
+                {% if current_level_filter == 'national' %}{% trans "National" %}{% elif current_level_filter == 'county' %}{% trans "County" %}{% else %}{% trans "All Levels" %}{% endif %}
             </div>
-
-            <div class="relative w-full md:w-96">
-                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-xl"></i>
-                <input type="text" id="billSearch" placeholder="Filter current view..." value="{{ current_search_query }}" autofocus
-                       class="w-full pl-10 pr-4 py-3 bg-white border border-zinc-300 rounded-md focus:outline-none focus:border-black font-bold uppercase text-xs tracking-widest transition">
-                <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-900 transition">
-                    <i class="ph ph-x text-lg"></i>
-                </button>
+            <i class="ph ph-caret-down text-zinc-400 text-xs transition-transform duration-200" id="scopeIcon"></i>
+            
+            <div id="scopeMenu" class="hidden absolute left-[-1px] right-[-1px] top-[calc(100%+4px)] bg-white border border-zinc-300 rounded-md z-50 py-1 flex flex-col">
+                <button type="button" class="text-left px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 focus:bg-zinc-100 outline-none transition-colors" onclick="selectOption('scope', 'all', '{{ i18n_all_levels|escapejs }}', event)">{% trans "All Levels" %}</button>
+                <button type="button" class="text-left px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 focus:bg-zinc-100 outline-none transition-colors" onclick="selectOption('scope', 'national', '{{ i18n_national|escapejs }}', event)">{% trans "National" %}</button>
+                <button type="button" class="text-left px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 focus:bg-zinc-100 outline-none transition-colors" onclick="selectOption('scope', 'county', '{{ i18n_county|escapejs }}', event)">{% trans "County" %}</button>
             </div>
+            <input type="hidden" id="scopeInput" value="{{ current_level_filter|default:'all' }}">
         </div>
+
+        <div id="countyWrapper" class="order-2 lg:order-3 lg:w-48 items-center px-4 py-1 h-14 relative focus-within:bg-zinc-50 transition-colors border-b lg:border-b-0 lg:border-r border-zinc-200 cursor-pointer {% if current_level_filter != 'county' %}hidden{% else %}flex{% endif %}" onclick="toggleDropdown('countyMenu', event)">
+            <i class="ph ph-map-pin text-zinc-400 mr-2 text-lg"></i>
+            <div class="flex-1 text-sm font-medium text-zinc-700 select-none truncate" id="countyLabel">
+                {% if current_county_filter %}{{ current_county_filter }}{% else %}{% trans "All Counties" %}{% endif %}
+            </div>
+            <i class="ph ph-caret-down text-zinc-400 text-xs transition-transform duration-200" id="countyIcon"></i>
+            
+            <div id="countyMenu" class="hidden absolute left-[-1px] right-[-1px] top-[calc(100%+4px)] bg-white border border-zinc-300 rounded-md z-50 py-1 flex flex-col max-h-64 overflow-y-auto">
+                <button type="button" class="text-left px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 focus:bg-zinc-100 outline-none transition-colors" onclick="selectOption('county', '', '{% trans "All Counties" %}', event)">{% trans "All Counties" %}</button>
+                {% for c in county_options %}
+                <button type="button" class="text-left px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 focus:bg-zinc-100 outline-none transition-colors" onclick="selectOption('county', '{{ c|escapejs }}', '{{ c|escapejs }}', event)">{{ c }}</button>
+                {% endfor %}
+            </div>
+            <input type="hidden" id="countyInput" value="{{ current_county_filter|default:'' }}">
+        </div>
+
+        <div class="order-3 lg:order-4 lg:w-56 flex items-center px-4 py-1 h-14 relative focus-within:bg-zinc-50 transition-colors border-b lg:border-b-0 border-zinc-200 cursor-pointer" onclick="toggleDropdown('statusMenu', event)">
+            <i class="ph ph-clock text-zinc-400 mr-2 text-lg"></i>
+            <div class="flex-1 text-sm font-medium text-zinc-700 select-none truncate" id="statusLabel">
+                {% if current_status_filter == 'closed' %}{% trans "Closed Registry" %}{% elif current_status_filter == 'all' %}{% trans "Complete Database" %}{% else %}{% trans "Active Participation" %}{% endif %}
+            </div>
+            <i class="ph ph-caret-down text-zinc-400 text-xs transition-transform duration-200" id="statusIcon"></i>
+            
+            <div id="statusMenu" class="hidden absolute left-[-1px] right-[-1px] top-[calc(100%+4px)] bg-white border border-zinc-300 rounded-md z-50 py-1 flex flex-col">
+                <button type="button" class="text-left px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 focus:bg-zinc-100 outline-none transition-colors" onclick="selectOption('status', 'ongoing', '{{ i18n_active_participation|escapejs }}', event)">{% trans "Active Participation" %}</button>
+                <button type="button" class="text-left px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 focus:bg-zinc-100 outline-none transition-colors" onclick="selectOption('status', 'closed', '{{ i18n_closed_registry|escapejs }}', event)">{% trans "Closed Registry" %}</button>
+                <button type="button" class="text-left px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 focus:bg-zinc-100 outline-none transition-colors" onclick="selectOption('status', 'all', '{{ i18n_complete_database|escapejs }}', event)">{% trans "Complete Database" %}</button>
+            </div>
+            <input type="hidden" id="statusInput" value="{{ current_status_filter|default:'ongoing' }}">
+        </div>
+
     </div>
 
+    {% if hot_bills %}
     <section id="hotSection">
-        <div class="flex items-center gap-2 mb-6">
-            <span class="w-8 h-px bg-red-600"></span>
-            <h2 class="text-xs font-black uppercase tracking-[0.3em] text-red-600">High Engagement</h2>
+        <div class="flex items-center gap-3 mb-6">
+            <span class="w-6 h-px bg-red-600"></span>
+            <h2 class="text-[11px] font-bold uppercase tracking-widest text-red-600">{% trans "High Engagement" %}</h2>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             {% for bill in hot_bills %}
@@ -43,124 +108,206 @@
                     <a href="{% url 'bill_detail' bill.id %}" class="block mb-8 relative z-10">
                         <div class="flex items-center gap-2 mb-4">
                             <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                            <span class="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Active Now</span>
+                            <span class="text-[9px] font-black text-zinc-400 uppercase tracking-widest">{% trans "Active Now" %}</span>
                         </div>
-                        <h3 class="font-black text-xl leading-tight group-hover:text-red-500 transition duration-300">{{ bill.title }}</h3>
+                        <h3 class="font-bold text-lg leading-snug group-hover:text-red-400 transition duration-300">{{ bill.title }}</h3>
                     </a>
                     <div class="flex justify-between items-center relative z-10">
                         <span class="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
-                            <i class="ph ph-eye text-sm"></i> {{ bill.view_count }} Readers
+                            <i class="ph ph-eye text-sm"></i> {{ bill.view_count }} {% trans "Readers" %}
                         </span>
-                        <a href="{% url 'bill_detail' bill.id %}" class="text-[10px] font-black uppercase tracking-widest text-white border-b-2 border-red-600 pb-1 hover:border-white transition">Join Debate</a>
+                        <a href="{% url 'bill_detail' bill.id %}" class="text-[10px] font-black uppercase tracking-widest text-white border-b border-red-500 pb-0.5 hover:border-white transition">{% trans "Join Debate" %}</a>
                     </div>
                 </div>
             {% endfor %}
         </div>
     </section>
+    {% endif %}
 
-    <section>
-        <div class="flex items-center justify-between mb-8">
-            <h2 id="view-title" class="text-xl font-black uppercase tracking-tighter">Active Participation</h2>
-            <div id="resultCount" class="text-[10px] font-black text-zinc-400 uppercase tracking-widest border-l border-zinc-300 pl-4">Showing Results</div>
+    <section class="pt-2">
+        <div class="mb-6 flex flex-col gap-2 sm:mb-8 sm:flex-row sm:items-baseline sm:justify-between">
+            <h2 id="view-title" class="text-xl font-bold tracking-tight text-zinc-900 sm:text-2xl">{% trans "Active Participation" %}</h2>
+            <div id="resultCount" class="text-xs font-semibold tabular-nums text-zinc-400">{% trans "Showing" %} {{ page_obj.paginator.count }} {% trans "results" %}</div>
         </div>
 
-        <div id="billGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-opacity duration-300">
+        <div id="billGrid" class="grid grid-cols-1 gap-5 transition-opacity duration-300 sm:grid-cols-2 lg:grid-cols-3 {% if not ongoing_bills %}hidden{% endif %}">
             {% for bill in ongoing_bills %}
-            <div class="bill-card bg-white border border-zinc-200 p-8 rounded-md hover:border-black transition-all duration-300 flex flex-col justify-between h-full group">
+            <div class="flex h-full flex-col justify-between rounded-md border border-zinc-200 bg-white p-6 transition-colors hover:border-zinc-400 group">
                 <a href="{% url 'bill_detail' bill.id %}" class="block mb-6">
-                    <div class="flex justify-between items-start mb-4">
+                    <div class="flex justify-between items-start mb-4 gap-2 flex-wrap">
                         <span class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{{ bill.created_at|date:"M d, Y" }}</span>
-                        {% if bill.current_status == 'CL' %}
-                            <span class="bg-zinc-100 text-zinc-500 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">Closed</span>
-                        {% else %}
-                            <span class="bg-green-50 text-green-700 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">Ongoing</span>
-                        {% endif %}
+                        <div class="flex flex-wrap gap-1.5 justify-end">
+                            {% if bill.government_level == 'CO' %}
+                                <span class="bg-zinc-100 text-zinc-800 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest" title="{{ bill.county }}">{% trans "County" %}{% if bill.county %}: {{ bill.county }}{% endif %}</span>
+                            {% else %}
+                                <span class="bg-zinc-800 text-white text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">{% trans "National" %}</span>
+                            {% endif %}
+                            {% if bill.current_status == 'CL' %}
+                                <span class="border border-zinc-200 text-zinc-500 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">{% trans "Closed" %}</span>
+                            {% else %}
+                                <span class="border border-zinc-900 text-zinc-900 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">{% trans "Ongoing" %}</span>
+                            {% endif %}
+                        </div>
                     </div>
-                    <h3 class="font-black text-lg text-zinc-900 group-hover:text-red-600 leading-snug mb-4 transition-colors">{{ bill.title }}</h3>
-                    <p class="text-xs text-zinc-500 line-clamp-3 font-medium leading-relaxed">{{ bill.ai_analysis.english.short_summary }}</p>
+                    <h3 class="font-black text-lg text-zinc-900 group-hover:text-zinc-600 leading-snug mb-4 transition-colors">{{ bill.title }}</h3>
+                    {% with s=bill.list_card_summary %}
+                    <p class="text-xs font-medium leading-relaxed text-zinc-600 line-clamp-3">{% if s %}{{ s }}{% else %}<span class="italic text-zinc-400">{% trans "Summary coming soon." %}</span>{% endif %}</p>
+                    {% endwith %}
                 </a>
 
                 <div class="mt-auto pt-6 border-t border-zinc-100">
                     <div class="flex items-center justify-between text-[10px] font-black uppercase tracking-widest mb-6">
                         <span class="text-zinc-500 flex items-center gap-1.5">
                             <i class="ph ph-users text-sm"></i>
-                            <span>{{ bill.support_count|add:bill.oppose_count }} Votes</span>
+                            <span>{{ bill.support_count|add:bill.oppose_count }} {% trans "Votes" %}</span>
                         </span>
                         <span class="text-zinc-500 flex items-center gap-1.5">
                             <i class="ph ph-eye text-sm"></i>
-                            <span>{{ bill.view_count }} Views</span>
+                            <span>{{ bill.view_count }} {% trans "Views" %}</span>
                         </span>
                     </div>
                     {% if bill.current_status == 'CL' %}
-                        <a href="{% url 'bill_detail' bill.id %}" class="block w-full text-center border-2 border-zinc-900 text-zinc-900 text-[10px] font-black py-3 rounded-md hover:bg-zinc-900 hover:text-white transition uppercase tracking-widest">View Results →</a>
+                        <a href="{% url 'bill_detail' bill.id %}" class="block w-full text-center border border-zinc-300 text-zinc-700 text-[10px] font-black py-3 rounded-md hover:bg-zinc-50 transition uppercase tracking-widest">{% trans "View Results" %} →</a>
                     {% else %}
-                        <a href="{% url 'bill_detail' bill.id %}" class="block w-full text-center bg-zinc-900 text-white text-[10px] font-black py-3 rounded-md hover:bg-black transition uppercase tracking-widest">Participate Now</a>
+                        <a href="{% url 'bill_detail' bill.id %}" class="block w-full text-center bg-zinc-900 text-white text-[10px] font-black py-3 rounded-md hover:bg-zinc-800 transition uppercase tracking-widest">{% trans "Participate Now" %}</a>
                     {% endif %}
                 </div>
             </div>
             {% endfor %}
         </div>
 
-        <div id="noResults" class="hidden py-24 border-2 border-dashed border-zinc-200 rounded-md flex flex-col items-center justify-center text-zinc-400 bg-zinc-50/50">
-            <i class="ph ph-folder-open text-7xl mb-4 opacity-20"></i>
-            <p id="noResultsTitle" class="font-black uppercase tracking-[0.2em] text-sm text-zinc-500">No Registry Found</p>
-            <p id="noResultsSubtext" class="text-[10px] font-bold mt-2 uppercase">Try adjusting your filters or search term</p>
-            <button onclick="clearAllFilters()" class="mt-4 px-5 py-2 border border-zinc-900 text-zinc-900 text-[10px] font-black uppercase tracking-widest rounded-md hover:bg-zinc-900 hover:text-white transition">
-                Clear All Filters
-            </button>
+        <div id="noResults" class="flex flex-col items-center justify-center rounded-md border border-dashed border-zinc-300 bg-zinc-50 py-24 text-zinc-400 sm:py-32 transition-all {% if ongoing_bills %}hidden{% endif %}">
+            <i class="ph ph-magnifying-glass text-4xl mb-4 text-zinc-300"></i>
+            <p id="noResultsTitle" class="font-bold text-zinc-900">{% trans "No Registry Found" %}</p>
+            <p id="noResultsSubtext" class="text-xs mt-1 text-zinc-500">{% trans "Try adjusting your filters or search term" %}</p>
         </div>
     </section>
 </div>
 
 <script>
-    let currentFilter = '{{ current_status_filter|default:"ongoing" }}';
+    const I18N = {
+        ongoing: "{{ i18n_active_participation|escapejs }}",
+        closed: "{{ i18n_closed_registry|escapejs }}",
+        all: "{{ i18n_complete_database|escapejs }}",
+        showing: "{{ i18n_showing|escapejs }}",
+        results: "{{ i18n_results|escapejs }}",
+        noClosed: "{{ i18n_no_closed|escapejs }}",
+        noClosedSub: "{{ i18n_no_closed_sub|escapejs }}",
+        noResults: "{{ i18n_no_results|escapejs }}",
+        noResultsSub: "{{ i18n_no_results_sub|escapejs }}",
+        noRegistry: "{{ i18n_no_registry|escapejs }}",
+        noRegistrySub: "{{ i18n_no_registry_sub|escapejs }}",
+        closedBadge: "{{ i18n_closed|escapejs }}",
+        ongoingBadge: "{{ i18n_ongoing|escapejs }}",
+        votes: "{{ i18n_votes|escapejs }}",
+        views: "{{ i18n_views|escapejs }}",
+        viewResults: "{{ i18n_view_results|escapejs }}",
+        participateNow: "{{ i18n_participate_now|escapejs }}",
+        national: "{{ i18n_national|escapejs }}",
+        county: "{{ i18n_county|escapejs }}",
+        summarySoon: "{{ i18n_summary_soon|escapejs }}"
+    };
 
-    async function applyFilter(filterType) {
-        currentFilter = filterType;
+    let searchTimeout;
+    const searchInputEl = document.getElementById('billSearch');
+    const scopeInput = document.getElementById('scopeInput');
+    const countyInput = document.getElementById('countyInput');
+    const statusInput = document.getElementById('statusInput');
+    const countyWrapper = document.getElementById('countyWrapper');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+    function toggleDropdown(menuId, event) {
+        event.stopPropagation();
+        const menu = document.getElementById(menuId);
+        if (!menu) return;
+        const icon = document.getElementById(menuId.replace('Menu', 'Icon'));
+        const isHidden = menu.classList.contains('hidden');
+        
+        closeAllDropdowns();
+        
+        if (isHidden) {
+            menu.classList.remove('hidden');
+            if (icon) icon.style.transform = 'rotate(180deg)';
+        }
+    }
+
+    function closeAllDropdowns() {
+        ['scopeMenu', 'countyMenu', 'statusMenu'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el && !el.classList.contains('hidden')) {
+                el.classList.add('hidden');
+                const icon = document.getElementById(id.replace('Menu', 'Icon'));
+                if (icon) icon.style.transform = 'rotate(0deg)';
+            }
+        });
+    }
+
+    document.addEventListener('click', closeAllDropdowns);
+
+    function selectOption(type, value, labelText, event) {
+        event.stopPropagation();
+        document.getElementById(type + 'Input').value = value;
+        document.getElementById(type + 'Label').innerText = labelText;
+        closeAllDropdowns();
+        triggerFilterUpdate();
+    }
+
+    function buildFilterQueryParams() {
+        const params = new URLSearchParams();
+        params.set('status', statusInput.value);
+        params.set('level', scopeInput.value);
+        params.set('q', searchInputEl.value);
+        
+        if (scopeInput.value === 'county' && countyInput.value) {
+            params.set('county', countyInput.value);
+        }
+        
+        const cur = new URLSearchParams(window.location.search);
+        if (cur.has('archived')) params.set('archived', cur.get('archived'));
+        
+        return params.toString();
+    }
+
+    async function triggerFilterUpdate() {
+        if (scopeInput.value === 'county') {
+            countyWrapper.classList.remove('hidden');
+            countyWrapper.classList.add('flex');
+        } else {
+            countyWrapper.classList.add('hidden');
+            countyWrapper.classList.remove('flex');
+            countyInput.value = '';
+            document.getElementById('countyLabel').innerText = "{{ i18n_all_counties|escapejs }}";
+        }
+
+        if (searchInputEl.value.trim() || scopeInput.value !== 'all' || statusInput.value !== 'ongoing') {
+            clearSearchBtn.classList.remove('hidden');
+        } else {
+            clearSearchBtn.classList.add('hidden');
+        }
+
         const grid = document.getElementById('billGrid');
-        const searchInput = document.getElementById('billSearch');
         const titleEl = document.getElementById('view-title');
         const hotSection = document.getElementById('hotSection');
 
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.classList.remove('bg-white', 'text-black');
-            btn.classList.add('text-zinc-500');
-        });
-        document.getElementById(`filter-${filterType}`).classList.add('bg-white', 'text-black');
-        document.getElementById(`filter-${filterType}`).classList.remove('text-zinc-500');
-
-        const titles = { 'ongoing': 'Active Participation', 'closed': 'Archive', 'all': 'Complete Registry' };
-        titleEl.innerText = titles[filterType];
-
+        titleEl.innerText = document.getElementById('statusLabel').innerText;
         grid.style.opacity = '0.5';
 
-        const selectionStart = searchInput.selectionStart;
-        const selectionEnd = searchInput.selectionEnd;
-
         try {
-            const response = await fetch(`?status=${filterType}&q=${encodeURIComponent(searchInput.value)}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
+            const qs = buildFilterQueryParams();
+            const response = await fetch(`?${qs}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            if (!response.ok) throw new Error('Filter request failed');
+            
             const data = await response.json();
+            history.replaceState(null, '', qs ? `${window.location.pathname}?${qs}` : window.location.pathname);
 
-            // Hide high engagement if searching or if zero results
-            if (searchInput.value.trim() !== '' || filterType === 'closed' || data.bills.length === 0) {
-                hotSection.classList.add('hidden');
-            } else {
-                hotSection.classList.remove('hidden');
-            }
+            const hideHot = searchInputEl.value.trim() !== '' || statusInput.value !== 'ongoing' || data.bills.length === 0 || scopeInput.value !== 'all';
+            if (hotSection) hotSection.classList.toggle('hidden', hideHot);
 
             renderBills(data.bills);
         } catch (error) {
-            console.error("Filter failed", error);
+            console.error(error);
         } finally {
             grid.style.opacity = '1';
-            updateClearButton();
-            searchInput.focus();
-            if (selectionStart !== null && selectionEnd !== null) {
-                const end = searchInput.value.length;
-                searchInput.setSelectionRange(Math.min(selectionStart, end), Math.min(selectionEnd, end));
-            }
         }
     }
 
@@ -170,23 +317,23 @@
         const countDisplay = document.getElementById('resultCount');
         const noResultsTitle = document.getElementById('noResultsTitle');
         const noResultsSubtext = document.getElementById('noResultsSubtext');
-        const q = document.getElementById('billSearch').value.trim();
+        const q = searchInputEl.value.trim();
 
-        grid.innerHTML = ''; // Crucial: clear the grid first
-        countDisplay.innerText = `Showing ${bills.length} Results`;
+        grid.innerHTML = '';
+        countDisplay.innerText = `${I18N.showing} ${bills.length} ${I18N.results}`;
 
         if (bills.length === 0) {
             grid.classList.add('hidden');
             noResults.classList.remove('hidden');
-            if (currentFilter === 'closed' && !q) {
-                noResultsTitle.innerText = 'No Closed Bills Yet';
-                noResultsSubtext.innerText = 'No bills have closed in the last 30 days';
+            if (statusInput.value === 'closed' && !q) {
+                noResultsTitle.innerText = I18N.noClosed;
+                noResultsSubtext.innerText = I18N.noClosedSub;
             } else if (q) {
-                noResultsTitle.innerText = 'No Results Found In This Category';
-                noResultsSubtext.innerText = 'Try another keyword or clear all filters';
+                noResultsTitle.innerText = I18N.noResults;
+                noResultsSubtext.innerText = I18N.noResultsSub;
             } else {
-                noResultsTitle.innerText = 'No Registry Found';
-                noResultsSubtext.innerText = 'Try adjusting your filters or search term';
+                noResultsTitle.innerText = I18N.noRegistry;
+                noResultsSubtext.innerText = I18N.noRegistrySub;
             }
             return;
         }
@@ -195,74 +342,76 @@
         noResults.classList.add('hidden');
 
         bills.forEach(bill => {
+            const levelBadge = bill.government_level === 'CO'
+                ? `<span class="bg-zinc-100 text-zinc-800 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">${I18N.county}${bill.county ? ': ' + escapeHtml(bill.county) : ''}</span>`
+                : `<span class="bg-zinc-800 text-white text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">${I18N.national}</span>`;
+            
             const statusBadge = bill.status === 'CL'
-                ? '<span class="bg-zinc-100 text-zinc-500 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">Closed</span>'
-                : '<span class="bg-green-50 text-green-700 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">Ongoing</span>';
+                ? `<span class="border border-zinc-200 text-zinc-500 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">${I18N.closedBadge}</span>`
+                : `<span class="border border-zinc-900 text-zinc-900 text-[9px] font-black px-2 py-1 rounded-sm uppercase tracking-widest">${I18N.ongoingBadge}</span>`;
 
             const actionBtn = bill.status === 'CL'
-                ? `<a href="${bill.detail_url}" class="block w-full text-center border-2 border-zinc-900 text-zinc-900 text-[10px] font-black py-3 rounded-md hover:bg-zinc-900 hover:text-white transition uppercase tracking-widest">View Results →</a>`
-                : `<a href="${bill.detail_url}" class="block w-full text-center bg-zinc-900 text-white text-[10px] font-black py-3 rounded-md hover:bg-black transition uppercase tracking-widest">Participate Now</a>`;
+                ? `<a href="${bill.detail_url}" class="block w-full text-center border border-zinc-300 text-zinc-700 text-[10px] font-black py-3 rounded-md hover:bg-zinc-50 transition uppercase tracking-widest">${I18N.viewResults} →</a>`
+                : `<a href="${bill.detail_url}" class="block w-full text-center bg-zinc-900 text-white text-[10px] font-black py-3 rounded-md hover:bg-zinc-800 transition uppercase tracking-widest">${I18N.participateNow}</a>`;
 
-            const card = `
-                <div class="bill-card bg-white border border-zinc-200 p-8 rounded-md hover:border-black transition-all duration-300 flex flex-col justify-between h-full group">
+            grid.insertAdjacentHTML('beforeend', `
+                <div class="flex h-full flex-col justify-between rounded-md border border-zinc-200 bg-white p-6 transition-colors hover:border-zinc-400 group">
                     <a href="${bill.detail_url}" class="block mb-6">
-                        <div class="flex justify-between items-start mb-4">
+                        <div class="flex justify-between items-start mb-4 gap-2 flex-wrap">
                             <span class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">${bill.created_at}</span>
-                            ${statusBadge}
+                            <div class="flex flex-wrap gap-1.5 justify-end">${levelBadge}${statusBadge}</div>
                         </div>
-                        <h3 class="font-black text-lg text-zinc-900 group-hover:text-red-600 leading-snug mb-4 transition-colors">${bill.title}</h3>
-                        <p class="text-xs text-zinc-500 line-clamp-3 font-medium leading-relaxed">${bill.summary}</p>
+                        <h3 class="font-black text-lg text-zinc-900 group-hover:text-zinc-600 leading-snug mb-4 transition-colors">${escapeHtml(bill.title)}</h3>
+                        <p class="text-xs font-medium leading-relaxed text-zinc-600 line-clamp-3">${bill.summary ? escapeHtml(bill.summary) : '<span class="italic text-zinc-400">' + I18N.summarySoon + '</span>'}</p>
                     </a>
                     <div class="mt-auto pt-6 border-t border-zinc-100">
                         <div class="flex items-center justify-between text-[10px] font-black uppercase tracking-widest mb-6">
                             <span class="text-zinc-500 flex items-center gap-1.5">
                                 <i class="ph ph-users text-sm"></i>
-                                <span>${bill.support_count + bill.oppose_count} Votes</span>
+                                <span>${bill.support_count + bill.oppose_count} ${I18N.votes}</span>
                             </span>
                             <span class="text-zinc-500 flex items-center gap-1.5">
                                 <i class="ph ph-eye text-sm"></i>
-                                <span>${bill.view_count} Views</span>
+                                <span>${bill.view_count} ${I18N.views}</span>
                             </span>
                         </div>
                         ${actionBtn}
                     </div>
-                </div>`;
-            grid.insertAdjacentHTML('beforeend', card);
+                </div>
+            `);
         });
     }
 
-    let searchTimeout;
-    const searchInputEl = document.getElementById('billSearch');
-    function updateClearButton() {
-        const clearBtn = document.getElementById('clearSearchBtn');
-        if (searchInputEl.value.trim()) {
-            clearBtn.classList.remove('hidden');
-        } else {
-            clearBtn.classList.add('hidden');
-        }
-    }
-
-    function clearSearch() {
-        searchInputEl.value = '';
-        updateClearButton();
-        applyFilter(currentFilter);
+    function escapeHtml(s) {
+        const div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
     }
 
     function clearAllFilters() {
         searchInputEl.value = '';
-        currentFilter = 'ongoing';
-        applyFilter('ongoing');
+        
+        document.getElementById('scopeInput').value = 'all';
+        document.getElementById('scopeLabel').innerText = "{{ i18n_all_levels|escapejs }}";
+        
+        document.getElementById('countyInput').value = '';
+        document.getElementById('countyLabel').innerText = "{{ i18n_all_counties|escapejs }}";
+        
+        document.getElementById('statusInput').value = 'ongoing';
+        document.getElementById('statusLabel').innerText = "{{ i18n_active_participation|escapejs }}";
+        
+        triggerFilterUpdate();
     }
 
     searchInputEl.addEventListener('input', () => {
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => applyFilter(currentFilter), 300);
+        searchTimeout = setTimeout(triggerFilterUpdate, 300);
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-        updateClearButton();
-        const titles = { 'ongoing': 'Active Participation', 'closed': 'Archive', 'all': 'Complete Registry' };
-        document.getElementById('view-title').innerText = titles[currentFilter] || 'Active Participation';
+        if (searchInputEl.value.trim() || scopeInput.value !== 'all' || statusInput.value !== 'ongoing') {
+            clearSearchBtn.classList.remove('hidden');
+        }
     });
 </script>
 {% endblock %}

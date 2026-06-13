@@ -1,0 +1,922 @@
+# Voiced Project Swahili Translation.
+# Copyright (C) 2026 Voiced Kenya
+# This file is distributed under the same license as the Voiced package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Voiced 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-26 13:59+0300\n"
+"PO-Revision-Date: 2026-03-26 14:15+0300\n"
+"Last-Translator: Admin <admin@voiced.co.ke>\n"
+"Language-Team: Swahili <sw@li.org>\n"
+"Language: sw\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\accounts\templates\accounts\profile.html:9
+msgid "Identity & Settings"
+msgstr "Utambulisho na Mipangilio"
+
+#: .\accounts\templates\accounts\profile.html:10
+msgid "Manage your digital presence and platform preferences."
+msgstr "Simamia uwepo wako wa kidijitali na mapendeleo ya jukwaa."
+
+#: .\accounts\templates\accounts\profile.html:14
+msgid "Alias Privacy"
+msgstr "Faragha ya Jina Bandia"
+
+#: .\accounts\templates\accounts\profile.html:15
+msgid "Anonymous mode enabled"
+msgstr "Hali ya kutotambulika imewashwa"
+
+#: .\accounts\templates\accounts\profile.html:15
+msgid "Username mode enabled"
+msgstr "Hali ya jina la mtumiaji imewashwa"
+
+#: .\accounts\templates\accounts\profile.html:67
+msgid "Change Email"
+msgstr "Badilisha Barua Pepe"
+
+#: .\accounts\templates\accounts\profile.html:136
+msgid "Save All Changes"
+msgstr "Hifadhi Mabadiliko Yote"
+
+#: .\accounts\templates\accounts\wallet.html:4
+#: .\accounts\templates\accounts\wallet.html:11
+#: .\core\templates\core\base.html:116 .\core\templates\core\base.html:169
+msgid "Wallet"
+msgstr "Pochi"
+
+#: .\accounts\templates\accounts\wallet.html:12
+msgid "Balance, top-ups, and spending updated live."
+msgstr "Salio, kuongeza fedha, na matumizi yanasasishwa moja kwa moja."
+
+#: .\accounts\templates\accounts\wallet.html:14
+msgid "Profile"
+msgstr "Wasifu"
+
+#: .\accounts\templates\accounts\wallet.html:32
+msgid "Available balance"
+msgstr "Salio linalopatikana"
+
+#: .\accounts\templates\accounts\wallet.html:36
+#: .\core\templates\core\discussion_list.html:46
+#: .\core\templates\core\discussion_list.html:108
+msgid "Live"
+msgstr "Moja kwa moja"
+
+#: .\accounts\templates\accounts\wallet.html:40
+msgid "Total"
+msgstr "Jumla"
+
+#: .\accounts\templates\accounts\wallet.html:42
+msgid "Reserved"
+msgstr "Iliyohifadhiwa"
+
+#: .\accounts\templates\accounts\wallet.html:46
+msgid "Top up"
+msgstr "Ongeza fedha"
+
+#: .\accounts\templates\accounts\wallet.html:53
+msgid "Activity"
+msgstr "Shughuli"
+
+#: .\accounts\templates\accounts\wallet.html:99
+msgid "No activity yet"
+msgstr "Bado hakuna shughuli"
+
+#: .\accounts\templates\accounts\wallet.html:100
+msgid "Top up to get started."
+msgstr "Ongeza fedha kuanza."
+
+#: .\bills\models.py:36
+msgid "Processing"
+msgstr "Inachakatwa"
+
+#: .\bills\models.py:37
+msgid "Pending Review"
+msgstr "Inasubiri uhakiki"
+
+#: .\bills\models.py:38
+msgid "Published"
+msgstr "Imechapishwa"
+
+#: .\bills\models.py:39 .\core\templates\core\bill_list.html:20
+#: .\core\templates\core\bill_list.html:77
+#: .\core\templates\core\bill_list.html:132
+#: .\core\templates\core\discussion_list.html:15
+msgid "Closed"
+msgstr "Imefungwa"
+
+#: .\bills\models.py:115
+msgid "Passed"
+msgstr "Imepitishwa"
+
+#: .\bills\models.py:116
+msgid "Rejected"
+msgstr "Imekataliwa"
+
+#: .\bills\models.py:117
+msgid "Amended"
+msgstr "Imefanyiwa marekebisho"
+
+#: .\bills\models.py:118
+msgid "Withdrawn"
+msgstr "Imeondolewa"
+
+#: .\bills\models.py:119
+msgid "Other"
+msgstr "Nyingine"
+
+#: .\bills\models.py:136
+msgid "Kiswahili"
+msgstr "Kiswahili"
+
+#: .\bills\models.py:137
+msgid "Sheng"
+msgstr "Sheng"
+
+#: .\bills\models.py:191
+msgid "Sent"
+msgstr "Imetumwa"
+
+#: .\bills\models.py:192 .\payments\models.py:19
+msgid "Failed"
+msgstr "Imeshindikana"
+
+#: .\bills\models.py:193
+msgid "Skipped"
+msgstr "Imerukwa"
+
+#: .\bills\models.py:196
+msgid "USSD view summary"
+msgstr "Muhtasari wa USSD"
+
+#: .\bills\models.py:197
+msgid "New bill notification"
+msgstr "Arifa ya muswada mpya"
+
+#: .\bills\models.py:198
+msgid "Bill outcome update"
+msgstr "Taarifa ya matokeo ya muswada"
+
+#: .\bills\services\localization.py:53
+#, python-format
+msgid ""
+"Translation for this bill is not available in %(lang)s yet. Showing English "
+"version."
+msgstr "Tafsiri ya muswada huu kwa %(lang)s bado haijapatikana. Tunaonyesha toleo la Kiingereza."
+
+#: .\core\templates\core\base.html:7
+msgid "Voiced | The Nation is Talking"
+msgstr "Voiced | Taifa Linazungumza"
+
+#: .\core\templates\core\base.html:65 .\core\templates\core\base.html:165
+msgid "Bills"
+msgstr "Miswada"
+
+#: .\core\templates\core\base.html:66 .\core\templates\core\base.html:166
+#: .\core\templates\core\base.html:240
+msgid "Discussions"
+msgstr "Majadiliano"
+
+#: .\core\templates\core\base.html:99
+msgid "Verified Citizen"
+msgstr "Raia Aliyethibitishwa"
+
+#: .\core\templates\core\base.html:113 .\core\templates\core\base.html:175
+msgid "Profile & Preferences"
+msgstr "Wasifu na Mapendeleo"
+
+#: .\core\templates\core\base.html:125
+msgid "Log Out"
+msgstr "Ondoka"
+
+#: .\core\templates\core\base.html:131
+msgid "Log In"
+msgstr "Ingia"
+
+#: .\core\templates\core\base.html:132
+msgid "Register"
+msgstr "Jisajili"
+
+#: .\core\templates\core\base.html:158
+msgid "Menu"
+msgstr "Menyu"
+
+#: .\core\templates\core\base.html:179
+msgid "Language"
+msgstr "Lugha"
+
+#: .\core\templates\core\base.html:197
+msgid "Feature Phone Access"
+msgstr "Upatikanaji wa Simu ya Kawaida"
+
+#: .\core\templates\core\base.html:205
+msgid "LOG OUT"
+msgstr "TOKA"
+
+#: .\core\templates\core\base.html:210
+msgid "LOG IN"
+msgstr "INGIA"
+
+#: .\core\templates\core\base.html:211
+msgid "REGISTER"
+msgstr "JISAJILI"
+
+#: .\core\templates\core\base.html:233
+msgid ""
+"Translating complex government legislation into Sheng, Swahili, and English "
+"so every citizen can be heard."
+msgstr "Tafsiri ya sheria ngumu za serikali kwa Sheng, Swahili, na Kiingereza ili kila raia asikike."
+
+#: .\core\templates\core\base.html:237
+msgid "Explore"
+msgstr "Gundua"
+
+#: .\core\templates\core\base.html:239
+msgid "Active Bills"
+msgstr "Miswada Hai"
+
+#: .\core\templates\core\base.html:241
+msgid "About Us"
+msgstr "Kutuhusu"
+
+#: .\core\templates\core\base.html:246
+msgid "Legal"
+msgstr "Sheria"
+
+#: .\core\templates\core\base.html:248
+msgid "Privacy Policy"
+msgstr "Sera ya Faragha"
+
+#: .\core\templates\core\base.html:249
+msgid "Terms of Service"
+msgstr "Masharti ya Huduma"
+
+#: .\core\templates\core\base.html:254
+msgid "Connect"
+msgstr "Unganika"
+
+#: .\core\templates\core\base.html:266
+msgid "Voiced Kenya. All rights reserved."
+msgstr "Voiced Kenya. Haki zote zimehifadhiwa."
+
+#: .\core\templates\core\base.html:350
+msgid "Live Update"
+msgstr "Taarifa Mpya Moja kwa Moja"
+
+#: .\core\templates\core\base.html:353
+msgid "View Analysis"
+msgstr "Tazama Uchanganuzi"
+
+#: .\core\templates\core\bill_detail.html:27
+msgid "This bill closed on"
+msgstr "Muswada huu ulifungwa tarehe"
+
+#: .\core\templates\core\bill_detail.html:27
+msgid "Voting is no longer active."
+msgstr "Upigaji kura haupo tena."
+
+#: .\core\templates\core\bill_detail.html:35
+#: .\notifications\templates\notifications\notification_list.html:76
+msgid "Close"
+msgstr "Funga"
+
+#: .\core\templates\core\bill_detail.html:48
+msgid "Back to Active Bills"
+msgstr "Rudi kwa Miswada Hai"
+
+#: .\core\templates\core\bill_detail.html:48
+msgid "Back"
+msgstr "Rudi"
+
+#: .\core\templates\core\bill_detail.html:51
+#: .\core\templates\core\bill_list.html:94
+#: .\core\templates\core\bill_list.html:135
+#: .\core\templates\core\discussion_list.html:70
+#: .\core\templates\core\discussion_list.html:113
+msgid "Views"
+msgstr "Mitazamo"
+
+#: .\core\templates\core\bill_detail.html:58
+msgid "Participation Ended"
+msgstr "Ushiriki Umefungwa"
+
+#: .\core\templates\core\bill_detail.html:60
+msgid "Official Policy"
+msgstr "Sera Rasmi"
+
+#: .\core\templates\core\bill_detail.html:69
+msgid "Read PDF"
+msgstr "Soma PDF"
+
+#: .\core\templates\core\bill_detail.html:73
+msgid "View Discussion"
+msgstr "Tazama Majadiliano"
+
+#: .\core\templates\core\bill_detail.html:73
+msgid "Live Chat"
+msgstr "Gumzo Mubashara"
+
+#: .\core\templates\core\bill_detail.html:87
+msgid "Summary"
+msgstr "Muhtasari"
+
+#: .\core\templates\core\bill_detail.html:98
+msgid "Analysis & Implications"
+msgstr "Uchanganuzi na Athari"
+
+#: .\core\templates\core\bill_detail.html:108
+msgid "Affected Groups"
+msgstr "Makundi Yaliyoathirika"
+
+#: .\core\templates\core\bill_detail.html:123
+msgid "Participation"
+msgstr "Ushiriki"
+
+#: .\core\templates\core\bill_detail.html:128
+msgid "Live Results"
+msgstr "Matokeo Mubashara"
+
+#: .\core\templates\core\bill_detail.html:133
+msgid "Vote receipt generated"
+msgstr "Risiti ya kura imetengenezwa"
+
+#: .\core\templates\core\bill_detail.html:136
+msgid "Copy"
+msgstr "Nakili"
+
+#: .\core\templates\core\bill_detail.html:137
+msgid "Verify Receipt"
+msgstr "Thibitisha Risiti"
+
+#: .\core\templates\core\bill_detail.html:144
+msgid ""
+"Your vote was recorded but cannot be included in official documentation to "
+"Parliament unless you verify."
+msgstr "Kura yako imerekodiwa lakini haiwezi kujumuishwa katika nyaraka rasmi za Bunge hadi uthibitishe."
+
+#: .\core\templates\core\bill_detail.html:146
+msgid ""
+"If you vote, your vote will be included in the community pulse but not in "
+"official documentation to Parliament."
+msgstr "Ukipiga kura, kura yako itajumuishwa katika sauti ya jamii lakini si katika nyaraka rasmi za Bunge."
+
+#: .\core\templates\core\bill_detail.html:150
+msgid "Verify"
+msgstr "Thibitisha"
+
+#: .\core\templates\core\bill_detail.html:156
+msgid "Verified Kenyan Citizens have officially voted on this bill."
+msgstr "Raia wa Kenya waliothibitishwa wamepiga kura rasmi kuhusu muswada huu."
+
+#: .\core\templates\core\bill_detail.html:162
+msgid "You participated in this pulse."
+msgstr "Ulishiriki katika pulse hii."
+
+#: .\core\templates\core\bill_detail.html:162
+msgid "Your"
+msgstr "Yako"
+
+#: .\core\templates\core\bill_detail.html:162
+msgid "input was part of"
+msgstr "maoni yalikuwa sehemu ya"
+
+#: .\core\templates\core\bill_detail.html:162
+msgid "community voices."
+msgstr "sauti za jamii."
+
+#: .\core\templates\core\bill_detail.html:170
+msgid "Final Outcome"
+msgstr "Matokeo ya Mwisho"
+
+#: .\core\templates\core\bill_detail.html:178
+msgid "Final Consensus Recorded"
+msgstr "Makubaliano ya mwisho yamehifadhiwa"
+
+#: .\core\templates\core\bill_detail.html:179
+msgid ""
+"Voting is disabled as this bill has passed the public participation deadline."
+msgstr "Upigaji kura umefungwa kwa sababu muswada huu umepita makali ya ushiriki wa umma."
+
+#: .\core\templates\core\bill_detail.html:184
+msgid "Your Stance"
+msgstr "Msimamo Wako"
+
+#: .\core\templates\core\bill_detail.html:192
+#: .\core\templates\core\bill_detail.html:443
+msgid "Read more"
+msgstr "Soma zaidi"
+
+#: .\core\templates\core\bill_detail.html:196
+msgid "Change My Vote"
+msgstr "Badilisha Kura Yangu"
+
+#: .\core\templates\core\bill_detail.html:205
+#: .\core\templates\core\home.html:85
+msgid "Support"
+msgstr "Ungana Nao"
+
+#: .\core\templates\core\bill_detail.html:208
+#: .\core\templates\core\home.html:86
+msgid "Oppose"
+msgstr "Pingana Nao"
+
+#: .\core\templates\core\bill_detail.html:214
+msgid "Reason"
+msgstr "Sababu"
+
+#: .\core\templates\core\bill_detail.html:217
+msgid "Why this stance?"
+msgstr "Kwa nini msimamo huu?"
+
+#: .\core\templates\core\bill_detail.html:218
+msgid "Limit reached"
+msgstr "Ukomo umefikiwa"
+
+#: .\core\templates\core\bill_detail.html:221
+msgid "Submit Vote"
+msgstr "Wasilisha Kura"
+
+#: .\core\templates\core\bill_detail.html:222
+msgid "Cancel"
+msgstr "Ghairi"
+
+#: .\core\templates\core\bill_detail.html:228
+msgid "Sign In to Participate"
+msgstr "Ingia Ili Ushiriki"
+
+#: .\core\templates\core\bill_detail.html:242
+msgid "Participation Closed"
+msgstr "Ushiriki Umefungwa"
+
+#: .\core\templates\core\bill_detail.html:243
+msgid "The deadline for public memoranda was"
+msgstr "Mwisho wa kuwasilisha memoranda ya umma ulikuwa"
+
+#: .\core\templates\core\bill_detail.html:243
+msgid "You can still download the final AI-generated sentiment report below."
+msgstr "Bado unaweza kupakua ripoti ya mwisho ya maoni iliyotengenezwa na AI hapa chini."
+
+#: .\core\templates\core\bill_detail.html:246
+msgid "Download Collective Report"
+msgstr "Pakua Ripoti ya Pamoja"
+
+#: .\core\templates\core\bill_detail.html:253
+msgid "Citizen Toolbox Locked"
+msgstr "Zana za Raia Zimefungwa"
+
+#: .\core\templates\core\bill_detail.html:254
+msgid ""
+"Login to your account to unlock AI-powered petition drafting and collective "
+"sentiment reports."
+msgstr "Ingia katika akaunti yako ili ufungue uandishi wa maombi kwa msaada wa AI na ripoti za maoni."
+
+#: .\core\templates\core\bill_detail.html:256
+msgid "Sign In to Unlock"
+msgstr "Ingia Ili Ufungue"
+
+#: .\core\templates\core\bill_detail.html:262
+msgid "Participation Required"
+msgstr "Ushiriki Unahitajika"
+
+#: .\core\templates\core\bill_detail.html:263
+msgid ""
+"Cast your vote and provide a reason to unlock AI submission drafting and "
+"download the full analysis."
+msgstr "Piga kura yako na utoe sababu ili ufungue uandishi wa mawasilisho kwa AI na kupakua uchanganuzi kamili."
+
+#: .\core\templates\core\bill_detail.html:265
+msgid "Cast Your Vote Now"
+msgstr "Piga Kura Sasa"
+
+#: .\core\templates\core\bill_detail.html:272
+msgid "National Pulse Report"
+msgstr "Ripoti ya Sauti ya Taifa"
+
+#: .\core\templates\core\bill_detail.html:275
+msgid "Checking report readiness..."
+msgstr "Kuangalia utayari wa ripoti..."
+
+#: .\core\templates\core\bill_detail.html:278
+msgid "Download Report"
+msgstr "Pakua Ripoti"
+
+#: .\core\templates\core\bill_detail.html:284
+msgid "AI Legal Draft"
+msgstr "Rasimu ya Sheria ya AI"
+
+#: .\core\templates\core\bill_detail.html:287
+msgid ""
+"Generate a formal memorandum draft to Parliament based on your submitted "
+"position."
+msgstr "Tengeneza rasimu rasmi ya memorandum kwa Bunge kulingana na msimamo wako uliowasilishwa."
+
+#: .\core\templates\core\bill_detail.html:289
+msgid "Generate Draft"
+msgstr "Tengeneza Rasimu"
+
+#: .\core\templates\core\bill_detail.html:298
+msgid "Official Submission Draft"
+msgstr "Rasimu Rasmi ya Mawasilisho"
+
+#: .\core\templates\core\bill_detail.html:319
+msgid "Spread the Word"
+msgstr "Sambaza Ujumbe"
+
+#: .\core\templates\core\bill_detail.html:320
+msgid "Legislation affects everyone. Send this analysis to your circles."
+msgstr "Sheria huathiri kila mtu. Tuma uchambuzi huu kwa watu wako."
+
+#: .\core\templates\core\bill_detail.html:324
+msgid "Share Analysis"
+msgstr "Shiriki Uchanganuzi"
+
+#: .\core\templates\core\bill_detail.html:329
+#: .\core\templates\core\bill_detail.html:441
+msgid "Copy Link"
+msgstr "Nakili Kiungo"
+
+#: .\core\templates\core\bill_detail.html:335
+msgid "Share to Baraza"
+msgstr "Shiriki Barazani"
+
+#: .\core\templates\core\bill_detail.html:336
+msgid ""
+"Download a printable outreach flyer for meetings and public spaces, or send "
+"a concise WhatsApp call-to-action."
+msgstr "Pakua bango la kuchapisha kwa mikutano na maeneo ya umma, au tuma ujumbe mfupi wa WhatsApp."
+
+#: .\core\templates\core\bill_detail.html:348
+msgid "Poster includes QR + USSD fallback for offline participation."
+msgstr "Bango linajumuisha QR + USSD kwa ushiriki wa nje ya mtandao."
+
+#: .\core\templates\core\bill_detail.html:433
+msgid "Deadline Passed"
+msgstr "Muda Umekwisha"
+
+#: .\core\templates\core\bill_detail.html:434
+msgid "remaining"
+msgstr "zimebaki"
+
+#: .\core\templates\core\bill_detail.html:435
+#: .\core\templates\core\bill_list.html:90
+#: .\core\templates\core\bill_list.html:134
+msgid "Votes"
+msgstr "Kura"
+
+#: .\core\templates\core\bill_detail.html:436
+msgid "Vote recorded successfully."
+msgstr "Kura imerekodiwa kwa mafanikio."
+
+#: .\core\templates\core\bill_detail.html:437
+msgid "Error recording vote"
+msgstr "Hitilafu katika kurekodi kura"
+
+#: .\core\templates\core\bill_detail.html:438
+msgid "An error occurred."
+msgstr "Hitilafu imetokea."
+
+#: .\core\templates\core\bill_detail.html:439
+msgid "Copied"
+msgstr "Imenakiliwa"
+
+#: .\core\templates\core\bill_detail.html:440
+msgid "LINK COPIED!"
+msgstr "KIUNGO IMENAKILIWA!"
+
+#: .\core\templates\core\bill_detail.html:442
+msgid "Hide reason"
+msgstr "Ficha sababu"
+
+#: .\core\templates\core\bill_list.html:8
+msgid "This bill has been moved to the national archives."
+msgstr "Muswada huu umehamishwa kwenye kumbukumbu za taifa."
+
+#: .\core\templates\core\bill_list.html:13
+msgid "Legislation Tracker"
+msgstr "Kifuatiliaji cha Miswada"
+
+#: .\core\templates\core\bill_list.html:14
+msgid "Monitoring public participation and legislative progress."
+msgstr "Kufuatilia ushiriki wa umma na maendeleo ya muswada."
+
+#: .\core\templates\core\bill_list.html:19
+#: .\core\templates\core\bill_list.html:79
+#: .\core\templates\core\bill_list.html:133
+#: .\core\templates\core\discussion_list.html:14
+msgid "Ongoing"
+msgstr "Inaendelea"
+
+#: .\core\templates\core\bill_list.html:21
+#: .\core\templates\core\discussion_list.html:16
+msgid "All"
+msgstr "Zote"
+
+#: .\core\templates\core\bill_list.html:26
+msgid "Filter current view..."
+msgstr "Chuja mwonekano wa sasa..."
+
+#: .\core\templates\core\bill_list.html:39
+msgid "High Engagement"
+msgstr "Ushiriki Mkubwa"
+
+#: .\core\templates\core\bill_list.html:48
+msgid "Active Now"
+msgstr "Hai Sasa"
+
+#: .\core\templates\core\bill_list.html:54
+msgid "Readers"
+msgstr "Wasomaji"
+
+#: .\core\templates\core\bill_list.html:56
+#: .\core\templates\core\discussion_list.html:80
+#: .\core\templates\core\discussion_list.html:110
+msgid "Join Debate"
+msgstr "Jiunge na Mjadala"
+
+#: .\core\templates\core\bill_list.html:66
+#: .\core\templates\core\bill_list.html:121
+msgid "Active Participation"
+msgstr "Ushiriki Hai"
+
+#: .\core\templates\core\bill_list.html:67
+msgid "Showing Results"
+msgstr "Inaonyesha Matokeo"
+
+#: .\core\templates\core\bill_list.html:98
+#: .\core\templates\core\bill_list.html:136
+msgid "View Results"
+msgstr "Tazama Matokeo"
+
+#: .\core\templates\core\bill_list.html:100
+#: .\core\templates\core\bill_list.html:137
+msgid "Participate Now"
+msgstr "Shiriki Sasa"
+
+#: .\core\templates\core\bill_list.html:109
+#: .\core\templates\core\bill_list.html:130
+msgid "No Registry Found"
+msgstr "Hakuna Rekodi Iliyopatikana"
+
+#: .\core\templates\core\bill_list.html:110
+#: .\core\templates\core\bill_list.html:131
+msgid "Try adjusting your filters or search term"
+msgstr "Jaribu kubadili vichujio au neno la kutafuta"
+
+#: .\core\templates\core\bill_list.html:112
+msgid "Clear All Filters"
+msgstr "Futa Vichujio Vyote"
+
+#: .\core\templates\core\bill_list.html:122
+#: .\core\templates\core\discussion_list.html:44
+#: .\core\templates\core\discussion_list.html:107
+msgid "Archive"
+msgstr "Kumbukumbu"
+
+#: .\core\templates\core\bill_list.html:123
+msgid "Complete Registry"
+msgstr "Rekodi Kamili"
+
+#: .\core\templates\core\bill_list.html:124
+#: .\core\templates\core\discussion_list.html:34
+#: .\core\templates\core\discussion_list.html:105
+msgid "Showing"
+msgstr "Inaonyesha"
+
+#: .\core\templates\core\bill_list.html:125
+msgid "Results"
+msgstr "Matokeo"
+
+#: .\core\templates\core\bill_list.html:126
+msgid "No Closed Bills Yet"
+msgstr "Bado hakuna miswada iliyofungwa"
+
+#: .\core\templates\core\bill_list.html:127
+msgid "No bills have closed in the last 30 days"
+msgstr "Hakuna miswada iliyofungwa ndani ya siku 30 zilizopita"
+
+#: .\core\templates\core\bill_list.html:128
+msgid "No Results Found In This Category"
+msgstr "Hakuna matokeo yaliyopatikana katika kundi hili"
+
+#: .\core\templates\core\bill_list.html:129
+msgid "Try another keyword or clear all filters"
+msgstr "Jaribu neno lingine au futa vichujio vyote"
+
+#: .\core\templates\core\discussion_list.html:8
+msgid "Public Debates"
+msgstr "Mijadala ya Umma"
+
+#: .\core\templates\core\discussion_list.html:9
+msgid "Where the streets meet the law. Join active perspectives."
+msgstr "Pale mtaa unakutana na sheria. Jiunge na mitazamo hai."
+
+#: .\core\templates\core\discussion_list.html:21
+msgid "Search by title..."
+msgstr "Tafuta kwa kichwa cha habari..."
+
+#: .\core\templates\core\discussion_list.html:31
+msgid "Live Perspectives"
+msgstr "Mitazamo Mubashara"
+
+#: .\core\templates\core\discussion_list.html:34
+#: .\core\templates\core\discussion_list.html:106
+msgid "Debates"
+msgstr "Mijadala"
+
+#: .\core\templates\core\discussion_list.html:49
+#: .\core\templates\core\discussion_list.html:114
+msgid "Trending"
+msgstr "Inayovuma"
+
+#: .\core\templates\core\discussion_list.html:63
+#: .\core\templates\core\discussion_list.html:112
+msgid "Perspectives"
+msgstr "Mitazamo"
+
+#: .\core\templates\core\discussion_list.html:78
+#: .\core\templates\core\discussion_list.html:109
+msgid "Read Transcript"
+msgstr "Soma Maandishi"
+
+#: .\core\templates\core\discussion_list.html:85
+#: .\core\templates\core\discussion_list.html:111
+msgid "Sign in to join"
+msgstr "Ingia kujiunga"
+
+#: .\core\templates\core\discussion_list.html:96
+msgid "No Active Debates"
+msgstr "Hakuna Mijadala Hai"
+
+#: .\core\templates\core\home.html:33
+msgid "The Nation"
+msgstr "Taifa"
+
+#: .\core\templates\core\home.html:33
+msgid "is Talking."
+msgstr "Linazungumza."
+
+#: .\core\templates\core\home.html:34
+msgid ""
+"Voices are moving the needle. Join the largest community debating Kenyan "
+"legislation in Sheng, Swahili, and English."
+msgstr "Sauti zinaleta mabadiliko. Jiunge na jamii kubwa inayojadili sheria za Kenya kwa Sheng, Swahili, na Kiingereza."
+
+#: .\core\templates\core\home.html:36
+msgid "Explore Bills"
+msgstr "Gundua Miswada"
+
+#: .\core\templates\core\home.html:38
+msgid "Find Discussions"
+msgstr "Pata Mijadala"
+
+#: .\core\templates\core\home.html:40
+msgid "Join Us"
+msgstr "Jiunge Nasi"
+
+#: .\core\templates\core\home.html:46
+msgid "No Internet?"
+msgstr "Huna Mtandao?"
+
+#: .\core\templates\core\home.html:46
+msgid "No Problem."
+msgstr "Haina Shida."
+
+#: .\core\templates\core\home.html:47
+msgid ""
+"Access every bill summary and cast your vote via USSD. Empowering the "
+"streets with data."
+msgstr "Pata muhtasari wa kila muswada na upige kura kwa USSD. Kuwezesha mitaa kwa data."
+
+#: .\core\templates\core\home.html:54
+msgid "Your Language,"
+msgstr "Lugha Yako,"
+
+#: .\core\templates\core\home.html:54
+msgid "Your Voice."
+msgstr "Sauti Yako."
+
+#: .\core\templates\core\home.html:55
+msgid ""
+"We use AI to translate complex laws into Sheng and Swahili instantly. Making "
+"public participation a reality for every Mwananchi."
+msgstr "Tunatumia AI kutafsiri sheria ngumu kwa Sheng na Swahili mara moja. Kufanya ushiriki wa umma kuwa ukweli kwa kila Mwananchi."
+
+#: .\core\templates\core\home.html:57
+msgid "View Bills"
+msgstr "Tazama Miswada"
+
+#: .\core\templates\core\home.html:71
+msgid "Trending Bills"
+msgstr "Miswada Inayovuma"
+
+#: .\core\templates\core\home.html:72
+msgid "View All Bills"
+msgstr "Tazama Miswada Yote"
+
+#: .\core\templates\core\home.html:89
+msgid "Cast Vote"
+msgstr "Piga Kura"
+
+#: .\core\templates\core\home.html:93
+msgid "Sign in to vote"
+msgstr "Ingia kupiga kura"
+
+#: .\core\templates\core\home.html:102
+msgid "No Active Bills Found"
+msgstr "Hakuna miswada hai iliyopatikana"
+
+#: .\core\templates\core\home.html:110
+msgid "Voiced on the Go"
+msgstr "Voiced Popote Ulipo"
+
+#: .\core\templates\core\home.html:111
+msgid ""
+"We've partnered with major telcos to ensure you don't need a smartphone to "
+"be a part of the democracy. Use our USSD service for free."
+msgstr "Tumeshirikiana na mashirika ya simu ili kuhakikisha huhitaji smartphone kuwa sehemu ya demokrasia. Tumia USSD yetu bure."
+
+#: .\core\templates\core\home.html:114
+msgid "Dial Now"
+msgstr "Piga Sasa"
+
+#: .\core\templates\core\home.html:121
+msgid "Live Discussions"
+msgstr "Majadiliano Mubashara"
+
+#: .\core\templates\core\home.html:122
+msgid "Join Debates"
+msgstr "Jiunge na Mijadala"
+
+#: .\core\templates\core\home.html:130
+msgid "Live Now"
+msgstr "Hai Sasa"
+
+#: .\core\templates\core\home.html:137
+msgid "Join Chat"
+msgstr "Jiunge na Gumzo"
+
+#: .\core\templates\core\home.html:142
+msgid "Sign in to join chat"
+msgstr "Ingia kujiunga na gumzo"
+
+#: .\core\templates\core\home.html:151
+msgid "No Live Discussions"
+msgstr "Hakuna majadiliano hai"
+
+#: .\notifications\templates\notifications\notification_list.html:8
+msgid "Your Alerts"
+msgstr "Arifa Zako"
+
+#: .\notifications\templates\notifications\notification_list.html:9
+msgid "Stay updated on legislative shifts and community activity."
+msgstr "Pata taarifa za mabadiliko ya sheria na shughuli za jamii."
+
+#: .\notifications\templates\notifications\notification_list.html:15
+msgid "Mark All as Read"
+msgstr "Weka Zote Kuwa Zimesomwa"
+
+#: .\notifications\templates\notifications\notification_list.html:24
+msgid "ago"
+msgstr "zilizopita"
+
+#: .\notifications\templates\notifications\notification_list.html:54
+msgid "Silence is Golden"
+msgstr "Ukimya ni Dhahabu"
+
+#: .\notifications\templates\notifications\notification_list.html:75
+msgid "Go to Page"
+msgstr "Nenda kwenye Ukurasa"
+
+#: .\payments\models.py:12
+msgid "Top-up"
+msgstr "Ongeza salio"
+
+#: .\payments\models.py:13
+msgid "Deduction"
+msgstr "Makato"
+
+#: .\payments\models.py:14
+msgid "Refund"
+msgstr "Marejesho"
+
+#: .\payments\models.py:17
+msgid "Pending"
+msgstr "Inasubiri"
+
+#: .\payments\models.py:18
+msgid "Completed"
+msgstr "Imekamilika"
+
+#: .\payments\models.py:22
+msgid "Report / PDF"
+msgstr "Ripoti / PDF"
+
+#: .\payments\models.py:23
+msgid "Legal draft"
+msgstr "Rasimu ya kisheria"

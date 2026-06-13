@@ -1,0 +1,295 @@
+<div id="verificationModal" class="fixed inset-0 z-[10000] hidden flex items-start justify-center pt-[10vh] px-4 pb-6 bg-zinc-950/70 backdrop-blur-sm" onclick="if(event.target===this)requestVerificationCancel();">
+    <div class="bg-white w-full max-w-lg rounded-xl border border-zinc-200 shadow-2xl max-h-[85vh] flex flex-col relative" role="dialog" aria-modal="true" onclick="event.stopPropagation();">
+        <header class="flex items-start justify-between gap-3 px-5 pt-5 pb-3 border-b border-zinc-100">
+            <div>
+                <h3 class="text-base font-black uppercase tracking-tight text-zinc-900">Kenyan Identity Verification</h3>
+                <p class="text-xs text-zinc-500 font-medium mt-1">Pay KES {{ verification_fee|floatformat:2 }} then submit your National ID details.</p>
+            </div>
+            <button type="button" onclick="requestVerificationCancel()" class="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-900">
+                <i class="ph ph-x text-xl"></i>
+            </button>
+        </header>
+
+        <div class="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4">
+            <div id="verification-modal-error" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700"></div>
+            <div id="verification-modal-info" class="hidden rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800"></div>
+
+            <section id="verification-step-payment" class="rounded-lg border border-zinc-200 bg-zinc-50 p-4 space-y-3">
+                <p class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Step 1: Pay Verification Fee</p>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <button
+                        type="button"
+                        id="btnVerifyWallet"
+                        onclick="payVerification('wallet')"
+                        class="flex-1 min-h-[44px] px-4 rounded-lg bg-zinc-900 text-white text-[10px] font-black uppercase tracking-widest whitespace-nowrap hover:bg-black transition disabled:opacity-40 disabled:cursor-not-allowed"
+                        {% if wallet.available_balance < verification_fee %}disabled{% endif %}
+                    >
+                        Pay with Wallet (Bal: KES {{ wallet.available_balance|floatformat:2 }})
+                    </button>
+                    <button
+                        type="button"
+                        id="btnVerifyMpesa"
+                        onclick="toggleMpesaPhone(true)"
+                        class="flex-1 min-h-[44px] px-4 rounded-lg border border-zinc-900 text-zinc-900 text-[10px] font-black uppercase tracking-widest whitespace-nowrap hover:bg-zinc-100 transition"
+                    >
+                        Pay with M-Pesa
+                    </button>
+                </div>
+                <div id="verification-mpesa-phone-wrap" class="hidden pt-1 space-y-2">
+                    <input id="verification-mpesa-phone" type="tel" placeholder="2547XXXXXXXX" class="w-full min-h-[44px] border border-zinc-200 rounded-lg px-3 py-2 text-sm font-medium" />
+                    <button type="button" onclick="payVerification('mpesa')" class="w-full min-h-[44px] px-4 rounded-lg bg-green-600 text-white text-[10px] font-black uppercase tracking-widest whitespace-nowrap hover:bg-green-700 transition">
+                        Send STK Push
+                    </button>
+                </div>
+                <div id="verification-payment-waiting" class="hidden rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs font-bold text-zinc-700 flex items-center gap-2">
+                    <i class="ph ph-spinner animate-spin"></i> Waiting for M-Pesa confirmation...
+                </div>
+                {% if wallet.available_balance < verification_fee %}
+                <p class="text-[11px] text-amber-800 font-bold">Wallet balance is below KES {{ verification_fee|floatformat:2 }}. Top up or use M-Pesa.</p>
+                {% endif %}
+            </section>
+
+            <section id="verification-step-paid" class="hidden rounded-lg border border-green-200 bg-green-50 p-4 space-y-2">
+                <div class="flex items-center gap-2 text-green-800 font-black text-xs uppercase tracking-widest">
+                    <i class="ph ph-check-circle text-base"></i> Payment Successful
+                </div>
+                <p class="text-[11px] text-green-800 font-medium">Now complete your identity check below.</p>
+            </section>
+
+            <section id="verification-step-kyc" class="hidden rounded-lg border border-zinc-200 p-4 space-y-3">
+                <p class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Step 2: National Registry Check</p>
+                <div id="verification-kyc-spinner" class="hidden rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-bold text-zinc-700 flex items-center gap-2">
+                    <i class="ph ph-spinner animate-spin"></i> Verifying with National Registry...
+                </div>
+                <div class="space-y-3">
+                    <input id="kyc-first-name" type="text" placeholder="First Name" class="w-full min-h-[44px] border border-zinc-200 rounded-lg px-3 py-2 text-sm">
+                    <input id="kyc-last-name" type="text" placeholder="Last Name" class="w-full min-h-[44px] border border-zinc-200 rounded-lg px-3 py-2 text-sm">
+                    <input id="kyc-id-number" type="text" inputmode="numeric" pattern="[0-9]{6,10}" maxlength="10" placeholder="National ID Number" class="w-full min-h-[44px] border border-zinc-200 rounded-lg px-3 py-2 text-sm font-medium">
+                    <button type="button" onclick="submitKycModal()" class="w-full min-h-[44px] px-4 rounded-lg bg-zinc-900 text-white text-[10px] font-black uppercase tracking-widest whitespace-nowrap hover:bg-black transition">
+                        Verify Identity
+                    </button>
+                </div>
+            </section>
+
+            <section id="verification-step-success" class="hidden rounded-lg border border-emerald-200 bg-emerald-50 p-4 space-y-3">
+                <div class="flex items-center gap-2 text-emerald-800 font-black text-xs uppercase tracking-widest">
+                    <i class="ph ph-shield-check text-base"></i> Identity Verified
+                </div>
+                <p class="text-[11px] font-bold text-emerald-800">Identity Verified! You are now an Official Kenyan Voice on Voiced.</p>
+                <button type="button" onclick="toggleVerificationModal(false)" class="w-full min-h-[44px] px-4 rounded-lg bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest whitespace-nowrap hover:bg-emerald-700 transition">
+                    Close
+                </button>
+            </section>
+        </div>
+
+        <div id="verification-cancel-confirm" class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm px-5 py-6 flex items-center justify-center">
+            <div class="w-full rounded-xl border border-zinc-200 bg-white p-5 space-y-4 shadow-xl">
+                <p class="text-sm font-black uppercase tracking-wide text-zinc-900">Cancel verification process?</p>
+                <p id="verification-cancel-copy" class="text-xs text-zinc-600 font-medium leading-relaxed">
+                    You can continue this process later.
+                </p>
+                <div class="flex gap-2">
+                    <button type="button" onclick="hideVerificationCancelConfirm()" class="flex-1 min-h-[44px] rounded-lg border border-zinc-300 text-zinc-700 text-[10px] font-black uppercase tracking-widest hover:bg-zinc-100">
+                        Continue Verification
+                    </button>
+                    <button type="button" onclick="confirmVerificationCancel()" class="flex-1 min-h-[44px] rounded-lg bg-zinc-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-black">
+                        Yes, Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const verificationStateUrl = "{% url 'verification_state' %}";
+    const verificationSubmitUrl = "{% url 'verification_submit' %}";
+    const verificationPayUrl = "{% url 'initiate_verification_payment' %}";
+    let verificationPoll = null;
+    let verificationRuntimeState = null;
+
+    function getVerificationCookie(name) {
+        const cookies = document.cookie ? document.cookie.split(';') : [];
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) return decodeURIComponent(cookie.substring(name.length + 1));
+        }
+        return '';
+    }
+
+    function toggleVerificationModal(show) {
+        document.getElementById('verificationModal').classList.toggle('hidden', !show);
+        if (show) {
+            hideVerificationCancelConfirm();
+            loadVerificationState();
+        } else if (verificationPoll) {
+            clearInterval(verificationPoll);
+            verificationPoll = null;
+        }
+    }
+
+    function hideVerificationCancelConfirm() {
+        document.getElementById('verification-cancel-confirm').classList.add('hidden');
+    }
+
+    function requestVerificationCancel() {
+        const panel = document.getElementById('verification-cancel-confirm');
+        const copy = document.getElementById('verification-cancel-copy');
+        const state = verificationRuntimeState || {};
+        let msg = "You can continue this process later.";
+        if (state.payment_status === "PAID" && state.status !== "VERIFIED") {
+            msg = "Your payment is safe and will not be wasted. You can continue from where you left off later.";
+        } else if (!state.payment_status && !state.status) {
+            msg = "You can continue this process later.";
+        } else if (state.status === "VERIFIED") {
+            toggleVerificationModal(false);
+            return;
+        }
+        copy.textContent = msg;
+        panel.classList.remove('hidden');
+    }
+
+    function confirmVerificationCancel() {
+        hideVerificationCancelConfirm();
+        toggleVerificationModal(false);
+    }
+
+    function showVerificationMsg(type, message) {
+        const err = document.getElementById('verification-modal-error');
+        const info = document.getElementById('verification-modal-info');
+        err.classList.add('hidden');
+        info.classList.add('hidden');
+        if (!message) return;
+        const box = type === 'error' ? err : info;
+        box.textContent = message;
+        box.classList.remove('hidden');
+    }
+
+    function hideAllVerificationSteps() {
+        ['verification-step-payment', 'verification-step-paid', 'verification-step-kyc', 'verification-step-success']
+            .forEach(id => document.getElementById(id).classList.add('hidden'));
+    }
+
+    function toggleMpesaPhone(show) {
+        document.getElementById('verification-mpesa-phone-wrap').classList.toggle('hidden', !show);
+    }
+
+    async function loadVerificationState() {
+        try {
+            const resp = await fetch(verificationStateUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await resp.json();
+            if (!resp.ok || !data.ok) {
+                showVerificationMsg('error', data.error || 'Unable to load verification state.');
+                return;
+            }
+            verificationRuntimeState = data;
+            hideAllVerificationSteps();
+            if (data.is_kenyan || data.status === 'VERIFIED') {
+                document.getElementById('verification-step-success').classList.remove('hidden');
+                return;
+            }
+            if (data.can_submit_kyc) {
+                document.getElementById('verification-step-paid').classList.remove('hidden');
+                document.getElementById('verification-step-kyc').classList.remove('hidden');
+                if (data.full_name) {
+                    const parts = data.full_name.trim().split(/\s+/);
+                    document.getElementById('kyc-first-name').value = parts[0] || '';
+                    document.getElementById('kyc-last-name').value = parts.slice(1).join(' ') || '';
+                }
+                if (data.id_number) document.getElementById('kyc-id-number').value = data.id_number;
+            } else {
+                document.getElementById('verification-step-payment').classList.remove('hidden');
+                if (data.message) showVerificationMsg('info', data.message);
+            }
+        } catch (e) {
+            showVerificationMsg('error', 'Unable to load verification state.');
+        }
+    }
+
+    async function payVerification(method) {
+        showVerificationMsg('', '');
+        const fd = new FormData();
+        fd.append('method', method);
+        if (method === 'mpesa') {
+            const phone = (document.getElementById('verification-mpesa-phone').value || '').trim();
+            fd.append('phone', phone);
+        }
+
+        try {
+            const resp = await fetch(verificationPayUrl, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getVerificationCookie('csrftoken') },
+                body: fd
+            });
+            const data = await resp.json();
+            if (!resp.ok || !data.ok) {
+                showVerificationMsg('error', data.error || 'Payment initiation failed.');
+                return;
+            }
+            if (data.mode === 'wallet') {
+                showVerificationMsg('info', data.message || 'Payment successful.');
+                await loadVerificationState();
+                return;
+            }
+            if (data.mode === 'mpesa') {
+                document.getElementById('verification-payment-waiting').classList.remove('hidden');
+                showVerificationMsg('info', data.message || 'Waiting for M-Pesa confirmation...');
+                if (verificationPoll) clearInterval(verificationPoll);
+                verificationPoll = setInterval(async function() {
+                    await loadVerificationState();
+                    const paidVisible = !document.getElementById('verification-step-paid').classList.contains('hidden');
+                    const successVisible = !document.getElementById('verification-step-success').classList.contains('hidden');
+                    if (paidVisible || successVisible) {
+                        clearInterval(verificationPoll);
+                        verificationPoll = null;
+                        document.getElementById('verification-payment-waiting').classList.add('hidden');
+                    }
+                }, 3500);
+            }
+        } catch (e) {
+            showVerificationMsg('error', 'Payment request failed.');
+        }
+    }
+
+    async function submitKycModal() {
+        const first = (document.getElementById('kyc-first-name').value || '').trim();
+        const last = (document.getElementById('kyc-last-name').value || '').trim();
+        const idNo = (document.getElementById('kyc-id-number').value || '').trim();
+        if (!/^\d{6,10}$/.test(idNo)) {
+            showVerificationMsg('error', 'Enter a valid National ID format.');
+            return;
+        }
+        const fd = new FormData();
+        fd.append('first_name', first);
+        fd.append('last_name', last);
+        fd.append('id_number', idNo);
+        showVerificationMsg('', '');
+        document.getElementById('verification-kyc-spinner').classList.remove('hidden');
+        try {
+            const resp = await fetch(verificationSubmitUrl, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getVerificationCookie('csrftoken') },
+                body: fd
+            });
+            const data = await resp.json();
+            if (resp.ok && data.ok && data.verified) {
+                hideAllVerificationSteps();
+                document.getElementById('verification-step-success').classList.remove('hidden');
+                if (typeof launchConfettiBurst === 'function') launchConfettiBurst();
+                return;
+            }
+            if (data.first_name) document.getElementById('kyc-first-name').value = data.first_name;
+            if (data.last_name) document.getElementById('kyc-last-name').value = data.last_name;
+            if (data.id_number) document.getElementById('kyc-id-number').value = data.id_number;
+            showVerificationMsg('error', data.error || 'Verification failed.');
+            if (data.payment_exhausted) {
+                hideAllVerificationSteps();
+                document.getElementById('verification-step-payment').classList.remove('hidden');
+            }
+        } catch (e) {
+            showVerificationMsg('error', 'Verification request failed.');
+        } finally {
+            document.getElementById('verification-kyc-spinner').classList.add('hidden');
+        }
+    }
+</script>

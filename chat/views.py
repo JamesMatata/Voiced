@@ -6,8 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from bills.models import Bill
 from accounts.models import UserProfile
-from chat.models import ChatMessage, MessageReaction, ChatMessageAlias
-from chat.utils import generate_random_alias
+from chat.models import ChatMessage, MessageReaction
 
 from .moderation import check_message_toxicity
 
@@ -33,23 +32,14 @@ class BillChatView(LoginRequiredMixin, DetailView):
         if not hasattr(user, 'profile'):
             UserProfile.objects.create(user=user)
             user.refresh_from_db()
-
-        alias_obj, _ = ChatMessageAlias.objects.get_or_create(
-            user=user,
-            bill=self.object,
-            defaults={'alias_name': generate_random_alias()}
-        )
-        if not alias_obj.alias_name:
-            alias_obj.alias_name = generate_random_alias()
-            alias_obj.save(update_fields=['alias_name'])
-        context['user_alias'] = alias_obj.alias_name
+        context['user_alias'] = "User" if user.profile.use_alias else user.username
         context['user_id'] = user.id
         context['is_closed'] = self.object.current_status == Bill.Status.CLOSED
 
         if self.object.closing_date:
             context['closing_date_iso'] = self.object.closing_date.isoformat()
 
-        messages = self.object.messages.select_related('parent_message').order_by('created_at')[:100]
+        messages = self.object.messages.select_related('parent_message', 'user__profile').order_by('created_at')[:100]
 
         user_reactions = MessageReaction.objects.filter(
             user=user, message__in=messages
@@ -95,5 +85,6 @@ class BillChatView(LoginRequiredMixin, DetailView):
             'msg_id': msg.id,
             'content': msg.content,
             'user_alias': msg.get_display_alias(),
-            'parent_content': parent_content
+            'parent_content': parent_content,
+            'is_verified_citizen': bool(getattr(request.user.profile, "is_kenyan", False)),
         })

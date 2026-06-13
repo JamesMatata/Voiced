@@ -25,14 +25,15 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'fallback-secret-key-for-dev')
+VOTE_RECEIPT_SALT = os.getenv('VOTE_RECEIPT_SALT', SECRET_KEY)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', '1256-197-232-165-244.ngrok-free.app']
+ALLOWED_HOSTS = ['*', '4d63-102-208-180-229.ngrok-free.app', '.ngrok-free.app']
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://1256-197-232-165-244.ngrok-free.app", 'http://127.0.0.1:8000',
+    "https://4d63-102-208-180-229.ngrok-free.app", 'http://127.0.0.1:8000',
 ]
 
 
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.sites',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
@@ -50,11 +52,17 @@ INSTALLED_APPS = [
     # Third-parties
     'rest_framework',
     'channels',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.apple',
 
     # Local Apps
     'bills',
     'core',
     'accounts',
+    'payments',
     'chat',
     'notifications',
     'engagement',
@@ -63,9 +71,12 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'core.middleware.UserLanguageMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -81,8 +92,11 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
+                'django.template.context_processors.i18n',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'payments.context_processors.wallet_balance',
+                'core.context_processors.language_context',
             ],
         },
     },
@@ -134,7 +148,12 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
+LANGUAGES = [
+    ('en', 'English'),
+    ('sw', 'Kiswahili'),
+    ('sr', 'Sheng'),
+]
 
 TIME_ZONE = 'Africa/Nairobi'
 
@@ -150,6 +169,30 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
+
+# Public site URL for SMS links, M-Pesa callbacks (no trailing slash)
+BASE_URL = os.getenv('BASE_URL', 'http://127.0.0.1:8000')
+USSD_SHORTCODE = os.getenv('USSD_SHORTCODE', '*789#')
+USSD_VERIFY_OPTION_INDEX = os.getenv('USSD_VERIFY_OPTION_INDEX', '4')
+
+# Default cache (USSD SMS idempotency). Redis recommended; set DJANGO_USE_LOCAL_CACHE=1 for LocMem (dev only).
+if os.getenv('DJANGO_USE_LOCAL_CACHE', '').lower() in ('1', 'true', 'yes'):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'voiced-ussd-sms',
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': os.getenv('DJANGO_CACHE_REDIS_URL', 'redis://127.0.0.1:6379/1'),
+        }
+    }
 
 # Celery & Redis Setup
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
@@ -160,6 +203,13 @@ CELERY_BEAT_SCHEDULE = {
     'sync-bills-every-3-days': {
         'task': 'bills.tasks.run_all_scrapers',
         'schedule': crontab(minute=0, hour=2, day_of_month='*/3'),
+    },
+    # Reliability sweep for pending financial states:
+    # - expire stale M-Pesa top-ups
+    # - release stale reserved deductions (unused paid service attempts)
+    'sweep-stale-pending-transactions-every-minute': {
+        'task': 'payments.tasks.sweep_stale_pending_transactions',
+        'schedule': crontab(minute='*/1'),
     },
 }
 
@@ -173,14 +223,36 @@ REST_FRAMEWORK = {
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 LOGIN_URL = 'login'
+SITE_ID = int(os.getenv("SITE_ID", "1"))
 
-# For local testing: Prints the verification email to your terminal console
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
 
-# When you deploy for the hackathon, you will swap to this:
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = os.getenv('EMAIL_USER')
-# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASS')
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "APP": {
+            "client_id": os.getenv("GOOGLE_OAUTH_CLIENT_ID", ""),
+            "secret": os.getenv("GOOGLE_OAUTH_CLIENT_SECRET", ""),
+            "key": "",
+        }
+    },
+    "apple": {
+        "APP": {
+            "client_id": os.getenv("APPLE_OAUTH_CLIENT_ID", ""),
+            "secret": os.getenv("APPLE_OAUTH_CLIENT_SECRET", ""),
+            "key": "",
+        }
+    },
+}
+
+# Email (Brevo SMTP or any SMTP provider via env)
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp-relay.brevo.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() in ("1", "true", "yes")
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "False").lower() in ("1", "true", "yes")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "info@voiced.co.ke")

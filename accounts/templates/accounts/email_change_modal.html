@@ -1,0 +1,131 @@
+<div id="emailChangeModal" class="fixed inset-0 z-[10000] hidden flex items-start justify-center pt-[10vh] px-4 pb-6 bg-zinc-950/70 backdrop-blur-sm" onclick="if(event.target===this)toggleEmailChangeModal(false);">
+    <div class="bg-white w-full max-w-md rounded-xl border border-zinc-200 shadow-2xl max-h-[85vh] flex flex-col" role="dialog" aria-modal="true" onclick="event.stopPropagation();">
+        <header class="flex items-start justify-between gap-3 px-5 pt-5 pb-3 border-b border-zinc-100">
+            <div>
+                <h3 class="text-base font-black uppercase tracking-tight text-zinc-900">Change Email</h3>
+                <p class="text-xs text-zinc-500 font-medium mt-1">Verify your new email with a one-time code.</p>
+            </div>
+            <button type="button" onclick="toggleEmailChangeModal(false)" class="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-900">
+                <i class="ph ph-x text-xl"></i>
+            </button>
+        </header>
+        <div class="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4">
+            <div id="email-change-error" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700"></div>
+            <div id="email-change-info" class="hidden rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700"></div>
+
+            <section id="email-change-step-email" class="rounded-lg border border-zinc-200 p-4 space-y-3">
+                <p class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Step 1: New Email</p>
+                <input id="email-change-new-email" type="email" placeholder="name@example.com" class="w-full min-h-[44px] border border-zinc-200 rounded-lg px-3 py-2 text-sm">
+                <button type="button" onclick="requestEmailCode()" class="w-full min-h-[44px] px-4 rounded-lg bg-zinc-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-black">
+                    Send Verification Code
+                </button>
+            </section>
+
+            <section id="email-change-step-code" class="hidden rounded-lg border border-zinc-200 p-4 space-y-3">
+                <p class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Step 2: Verify Code</p>
+                <p id="email-change-target" class="text-[11px] text-zinc-600 font-medium"></p>
+                <input id="email-change-code" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="6-digit code" class="w-full min-h-[44px] border border-zinc-200 rounded-lg px-3 py-2 text-sm font-medium">
+                <button type="button" onclick="verifyEmailCode()" class="w-full min-h-[44px] px-4 rounded-lg bg-green-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-green-700">
+                    Verify & Update Email
+                </button>
+            </section>
+        </div>
+    </div>
+</div>
+
+<script>
+    const emailStateUrl = "{% url 'email_change_state' %}";
+    const emailRequestUrl = "{% url 'email_change_request_code' %}";
+    const emailVerifyUrl = "{% url 'email_change_verify_code' %}";
+
+    function showEmailMsg(type, msg) {
+        const e = document.getElementById('email-change-error');
+        const i = document.getElementById('email-change-info');
+        e.classList.add('hidden');
+        i.classList.add('hidden');
+        if (!msg) return;
+        const t = type === 'error' ? e : i;
+        t.textContent = msg;
+        t.classList.remove('hidden');
+    }
+
+    async function toggleEmailChangeModal(show) {
+        const m = document.getElementById('emailChangeModal');
+        m.classList.toggle('hidden', !show);
+        if (show) await loadEmailChangeState();
+    }
+
+    async function loadEmailChangeState() {
+        showEmailMsg('', '');
+        const emailStep = document.getElementById('email-change-step-email');
+        const codeStep = document.getElementById('email-change-step-code');
+        const current = document.getElementById('current-email-display');
+        try {
+            const r = await fetch(emailStateUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const d = await r.json();
+            if (current && d.current_email) current.value = d.current_email;
+            if (d.has_pending) {
+                emailStep.classList.add('hidden');
+                codeStep.classList.remove('hidden');
+                document.getElementById('email-change-target').textContent = `Code sent to ${d.pending_email}`;
+                document.getElementById('email-change-new-email').value = d.pending_email || '';
+            } else {
+                emailStep.classList.remove('hidden');
+                codeStep.classList.add('hidden');
+                document.getElementById('email-change-code').value = '';
+            }
+        } catch (e) {
+            showEmailMsg('error', 'Unable to load email state.');
+        }
+    }
+
+    async function requestEmailCode() {
+        const email = (document.getElementById('email-change-new-email').value || '').trim();
+        const fd = new FormData();
+        fd.append('new_email', email);
+        showEmailMsg('', '');
+        try {
+            const r = await fetch(emailRequestUrl, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getVerificationCookie('csrftoken') },
+                body: fd
+            });
+            const d = await r.json();
+            if (!r.ok || !d.ok) {
+                showEmailMsg('error', d.error || 'Failed to send code.');
+                return;
+            }
+            showEmailMsg('info', d.message);
+            document.getElementById('email-change-step-email').classList.add('hidden');
+            document.getElementById('email-change-step-code').classList.remove('hidden');
+            document.getElementById('email-change-target').textContent = `Code sent to ${d.pending_email}`;
+        } catch (e) {
+            showEmailMsg('error', 'Failed to send code.');
+        }
+    }
+
+    async function verifyEmailCode() {
+        const code = (document.getElementById('email-change-code').value || '').trim();
+        const fd = new FormData();
+        fd.append('code', code);
+        showEmailMsg('', '');
+        try {
+            const r = await fetch(emailVerifyUrl, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getVerificationCookie('csrftoken') },
+                body: fd
+            });
+            const d = await r.json();
+            if (!r.ok || !d.ok) {
+                showEmailMsg('error', d.error || 'Verification failed.');
+                return;
+            }
+            showEmailMsg('info', d.message || 'Email updated.');
+            const current = document.getElementById('current-email-display');
+            if (current && d.email) current.value = d.email;
+            setTimeout(() => toggleEmailChangeModal(false), 700);
+        } catch (e) {
+            showEmailMsg('error', 'Verification failed.');
+        }
+    }
+</script>

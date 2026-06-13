@@ -1,22 +1,64 @@
-from django.db.models import Count, Max, Q
+import csv
+import logging
+from django.db.models import Count, F, Max, Q
 from django.views.generic import ListView, DetailView, TemplateView
 from django.utils import timezone
-from django.http import JsonResponse, FileResponse, HttpResponse, Http404
+from django.http import JsonResponse, Http404, HttpResponse
 from django.db import transaction
 from django.shortcuts import get_object_or_404, render, redirect
-from django.contrib.auth.decorators import login_required
 from django.urls import reverse
+from django.utils.translation import get_language
 from datetime import timedelta
-import io
-import os
-import json
-from google import genai
-from google.genai import types
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
+from django.core.paginator import Paginator
+from django.conf import settings
+from django.utils import translation
+from django.views.decorators.http import require_POST
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from bills.models import Bill, BillVote
+from bills.services.scraper import KENYA_COUNTIES
+from bills.services.localization import resolve_bill_language_payload
+from bills.tasks import send_vote_feedback_sms_task
+from bills.utils import generate_bill_baraza_poster_pdf, generate_bill_baraza_poster_png
+from chat.models import ChatMessage
+
+logger = logging.getLogger(__name__)
+
+_COUNTY_OPTIONS_SORTED = tuple(sorted(KENYA_COUNTIES, key=lambda c: c.lower()))
+
+
+def _normalize_county_param(raw, county_choices=_COUNTY_OPTIONS_SORTED):
+    raw = (raw or "").strip()
+    if not raw:
+        return ""
+    if raw in county_choices:
+        return raw
+    lower = raw.lower()
+    for c in county_choices:
+        if c.lower() == lower:
+            return c
+    return ""
+
+
+@require_POST
+def set_language_preference(request):
+    lang = (request.POST.get("language") or "").split("-")[0].strip().lower()
+    supported = {code.split("-")[0] for code, _ in settings.LANGUAGES}
+    if lang not in supported:
+        lang = (settings.LANGUAGE_CODE or "en").split("-")[0]
+
+    request.session[settings.LANGUAGE_COOKIE_NAME] = lang
+    if request.user.is_authenticated and hasattr(request.user, "profile"):
+        request.user.profile.language = lang
+        request.user.profile.save(update_fields=["language"])
+
+    translation.activate(lang)
+    request.LANGUAGE_CODE = lang
+
+    next_url = (request.POST.get("next") or request.META.get("HTTP_REFERER") or "/").strip()
+    if not url_has_allowed_host_and_scheme(next_url, {request.get_host()}, request.is_secure()):
+        next_url = "/"
+    return redirect(next_url)
 
 
 class HomeView(TemplateView):
@@ -40,17 +82,37 @@ class BillListView(ListView):
     context_object_name = 'ongoing_bills'
     paginate_by = 20
 
-    def get_queryset(self):
+    def _parse_list_filters(self):
         filter_type = self.request.GET.get('status') or self.request.GET.get('filter', 'ongoing')
-        search_query = self.request.GET.get('q', '').strip()
+        if filter_type not in ('ongoing', 'closed', 'all'):
+            filter_type = 'ongoing'
+        level_filter = (self.request.GET.get('level') or 'all').lower()
+        if level_filter not in ('all', 'national', 'county'):
+            level_filter = 'all'
+        search_query = (self.request.GET.get('q') or '').strip()
+        raw_county = (self.request.GET.get('county') or '').strip()
+        county_key = ''
+        if level_filter == 'county':
+            county_key = _normalize_county_param(raw_county)
+        return filter_type, level_filter, search_query, county_key
+
+    def _apply_bill_list_filters(self, qs, filter_type, level_filter, search_query, county_key):
         today = timezone.now().date()
         threshold = today - timedelta(days=30)
-        qs = Bill.objects.filter(is_processed_by_ai=True, status=Bill.Status.PUBLISHED)
+
+        if level_filter == 'national':
+            qs = qs.filter(government_level=Bill.GovernmentLevel.NATIONAL)
+        elif level_filter == 'county':
+            qs = qs.filter(government_level=Bill.GovernmentLevel.COUNTY)
+            if county_key:
+                qs = qs.filter(county__iexact=county_key)
 
         if search_query:
             qs = qs.filter(
-                Q(title__icontains=search_query) |
-                Q(ai_analysis__english__short_summary__icontains=search_query)
+                Q(title__icontains=search_query)
+                | Q(ai_analysis__english__short_summary__icontains=search_query)
+                | Q(ai_analysis_summary_en__icontains=search_query)
+                | Q(summary_en__icontains=search_query)
             )
 
         if filter_type == 'ongoing':
@@ -64,6 +126,13 @@ class BillListView(ListView):
                 Q(closing_date__gte=threshold, closing_date__lt=today)
             )
 
+        return qs
+
+    def get_queryset(self):
+        ft, lv, sq, ck = self._parse_list_filters()
+        # Public list: published bills only (do not require AI completion—many stay hidden otherwise).
+        qs = Bill.objects.filter(status=Bill.Status.PUBLISHED)
+        qs = self._apply_bill_list_filters(qs, ft, lv, sq, ck)
         return qs.order_by('-created_at')
 
     def get(self, request, *args, **kwargs):
@@ -78,25 +147,34 @@ class BillListView(ListView):
                     'title': b.title,
                     'created_at': b.created_at.strftime("%b %d, %Y"),
                     'status': b.current_status,
-                    'summary': b.ai_analysis.get('english', {}).get('short_summary', ''),
+                    'summary': b.list_card_summary,
                     'support_count': b.support_count,
                     'oppose_count': b.oppose_count,
                     'view_count': b.view_count,
-                    'detail_url': f"/bills/{b.id}/"
+                    'detail_url': f"/bills/{b.id}/",
+                    'government_level': b.government_level,
+                    'county': b.county or '',
                 })
             return JsonResponse({'bills': data, 'active_status': active_status})
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['current_status_filter'] = self.request.GET.get('status') or self.request.GET.get('filter', 'ongoing')
-        context['current_search_query'] = self.request.GET.get('q', '').strip()
-        context['hot_bills'] = Bill.objects.filter(
+        ft, lv, sq, ck = self._parse_list_filters()
+        context['current_status_filter'] = ft
+        context['current_level_filter'] = lv
+        context['current_search_query'] = sq
+        context['county_options'] = list(_COUNTY_OPTIONS_SORTED)
+        context['current_county_filter'] = ck if lv == 'county' else ''
+
+        today = timezone.now().date()
+        hot_qs = Bill.objects.filter(
             status=Bill.Status.PUBLISHED,
-            closing_date__gte=timezone.now().date(),
-            view_count__gte=1000,
-            is_processed_by_ai=True
-        ).order_by('-view_count')[:3]
+            closing_date__gte=today,
+            view_count__gte=100,
+        )
+        hot_qs = self._apply_bill_list_filters(hot_qs, ft, lv, sq, ck)
+        context['hot_bills'] = hot_qs.order_by('-view_count')[:3]
         return context
 
 
@@ -129,16 +207,70 @@ class BillDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         bill = self.get_object()
+        localized = resolve_bill_language_payload(bill, get_language())
+        outcome = getattr(bill, "outcome", None)
         context['is_closed'] = bill.is_closed
+        context['bill_outcome'] = outcome
+        context["localized_bill"] = localized
+        context["translation_fallback_notice"] = localized.get("fallback_message") or ""
+        context['community_votes'] = bill.support_count + bill.oppose_count
+        context['official_verified_votes'] = bill.verified_support_count + bill.verified_oppose_count
+        vote_user_ids = set(BillVote.objects.filter(bill=bill).values_list("user_id", flat=True))
+        chat_user_ids = set(ChatMessage.objects.filter(bill=bill).values_list("user_id", flat=True))
+        total_participants = len(vote_user_ids | chat_user_ids)
+        context['total_participants'] = total_participants
 
         if bill.closing_date:
             context['closing_date_iso'] = bill.closing_date.isoformat()
 
         user_vote = None
+        is_kenyan_user = False
         if self.request.user.is_authenticated:
             user_vote = BillVote.objects.filter(bill=bill, user=self.request.user).first()
+            is_kenyan_user = bool(getattr(self.request.user.profile, "is_kenyan", False))
+            user_commented = ChatMessage.objects.filter(bill=bill, user=self.request.user).exists()
+            if user_vote:
+                context["user_participation_kind"] = "Official" if is_kenyan_user else "Pulse"
+            elif user_commented:
+                context["user_participation_kind"] = "Discussion"
+            else:
+                context["user_participation_kind"] = ""
+            context["user_participated"] = bool(user_vote or user_commented)
         context['user_vote'] = user_vote
-        context['preferred_lang'] = self.request.user.profile.language if self.request.user.is_authenticated else 'en'
+        context['is_kenyan_user'] = is_kenyan_user
+        preferred_lang = self.request.user.profile.language if self.request.user.is_authenticated else "en"
+        if preferred_lang == "sh":
+            preferred_lang = "sr"
+        if preferred_lang not in {"en", "sw", "sr"}:
+            preferred_lang = "en"
+        context['preferred_lang'] = preferred_lang
+
+        if self.request.user.is_authenticated:
+            from accounts.models import Wallet
+            from payments.constants import LEGAL_DRAFT_PRICE, REPORT_PRICE, VERIFICATION_FEE
+            from payments.models import Purchase, Transaction
+
+            wallet, _ = Wallet.objects.get_or_create(user=self.request.user)
+            context['wallet_balance'] = wallet.balance
+            context['wallet_available'] = wallet.available_balance
+            context['report_price'] = REPORT_PRICE
+            context['legal_draft_price'] = LEGAL_DRAFT_PRICE
+            context['verification_fee'] = VERIFICATION_FEE
+            context['has_report_purchase'] = Purchase.objects.filter(
+                user=self.request.user, bill=bill, service_type=Transaction.ServiceType.REPORT
+            ).exists()
+            context['has_draft_purchase'] = Purchase.objects.filter(
+                user=self.request.user, bill=bill, service_type=Transaction.ServiceType.DRAFT
+            ).exists()
+        else:
+            context['wallet_balance'] = None
+            context['wallet_available'] = None
+            context['report_price'] = None
+            context['legal_draft_price'] = None
+            context['verification_fee'] = None
+            context['has_report_purchase'] = False
+            context['has_draft_purchase'] = False
+
         return context
 
     @transaction.atomic
@@ -147,6 +279,8 @@ class BillDetailView(DetailView):
             return JsonResponse({'status': 'error', 'message': 'Not authenticated'}, status=403)
 
         bill = self.get_object()
+        if hasattr(bill, "outcome"):
+            return JsonResponse({'status': 'error', 'message': 'This bill now has a final outcome. Voting is closed.'}, status=403)
         if bill.is_closed:
             return JsonResponse({'status': 'error', 'message': 'This bill is closed. Voting is no longer active.'}, status=403)
 
@@ -154,32 +288,88 @@ class BillDetailView(DetailView):
         reason = request.POST.get('reason', '')
 
         if vote_type in ['support', 'oppose']:
-            vote, created = BillVote.objects.get_or_create(
-                bill=bill,
-                user=request.user,
-                defaults={'vote_type': vote_type, 'reason': reason}
+            bill = Bill.objects.select_for_update().get(pk=bill.pk)
+            vote = BillVote.objects.filter(bill=bill, user=request.user).first()
+            is_kenyan = bool(
+                getattr(getattr(request.user, "profile", None), "is_kenyan", False)
             )
 
-            if not created:
-                if vote.vote_type != vote_type:
-                    if vote.vote_type == 'support':
-                        bill.support_count -= 1
-                        bill.oppose_count += 1
+            created = False
+            if not vote:
+                vote = BillVote.objects.create(
+                    bill=bill,
+                    user=request.user,
+                    vote_type=vote_type,
+                    reason=reason,
+                )
+                created = True
+
+                update_fields = {
+                    "total_votes": F("total_votes") + 1,
+                    "support_count": F("support_count") + 1 if vote_type == "support" else F("support_count"),
+                    "oppose_count": F("oppose_count") + 1 if vote_type == "oppose" else F("oppose_count"),
+                }
+                if is_kenyan:
+                    update_fields["verified_citizen_votes"] = F("verified_citizen_votes") + 1
+                    if vote_type == "support":
+                        update_fields["verified_support_count"] = F("verified_support_count") + 1
                     else:
-                        bill.oppose_count -= 1
-                        bill.support_count += 1
+                        update_fields["verified_oppose_count"] = F("verified_oppose_count") + 1
+                Bill.objects.filter(pk=bill.pk).update(**update_fields)
+            else:
+                old_vote_type = vote.vote_type
                 vote.vote_type = vote_type
                 vote.reason = reason
-                vote.save()
-                bill.save()
+                vote.save(update_fields=["vote_type", "reason"])
 
-            return JsonResponse({
-                'status': 'success',
-                'vote_type': vote.vote_type,
-                'reason': vote.reason,
-                'support_count': bill.support_count,
-                'oppose_count': bill.oppose_count
-            })
+                if old_vote_type != vote_type:
+                    update_fields = {
+                        "support_count": F("support_count") + (1 if vote_type == "support" else -1),
+                        "oppose_count": F("oppose_count") + (1 if vote_type == "oppose" else -1),
+                    }
+                    if is_kenyan:
+                        update_fields["verified_support_count"] = F("verified_support_count") + (
+                            1 if vote_type == "support" else -1
+                        )
+                        update_fields["verified_oppose_count"] = F("verified_oppose_count") + (
+                            1 if vote_type == "oppose" else -1
+                        )
+                    Bill.objects.filter(pk=bill.pk).update(**update_fields)
+
+            bill.refresh_from_db()
+            verified_total = bill.verified_support_count + bill.verified_oppose_count
+            if verified_total >= 50 and verified_total >= bill.last_report_vote_count + 50:
+                Bill.objects.filter(pk=bill.pk).update(
+                    last_report_vote_count=verified_total,
+                    report_generation_in_progress=True,
+                )
+                from bills.tasks import generate_bill_report_pdf
+
+                generate_bill_report_pdf.delay(str(bill.id))
+                bill.refresh_from_db()
+
+            msg = "Success! Your official vote is recorded and will be included in the National Pulse analysis for Parliament."
+            if created and not is_kenyan:
+                msg = "Pulse recorded! Your opinion is visible to the community, but it cannot be presented officially to Parliament until you verify your Kenyan identity."
+            elif (not created) and not is_kenyan:
+                msg = "Pulse recorded! Your opinion is visible to the community, but it cannot be presented officially to Parliament until you verify your Kenyan identity."
+
+            try:
+                send_vote_feedback_sms_task.delay(request.user.id, str(bill.id), vote.receipt_id)
+            except Exception:
+                logger.exception("Failed to queue vote feedback SMS for vote %s", vote.id)
+            return JsonResponse(
+                {
+                    'status': 'success',
+                    'vote_type': vote.vote_type,
+                    'reason': vote.reason,
+                    'receipt_id': vote.receipt_id,
+                    'support_count': bill.support_count,
+                    'oppose_count': bill.oppose_count,
+                    'verified_citizen_votes': bill.verified_citizen_votes,
+                    'message': msg,
+                }
+            )
 
         return JsonResponse({'status': 'error', 'message': 'Invalid vote type'}, status=400)
 
@@ -235,160 +425,134 @@ def bill_vote_counts(request, pk):
     return render(request, 'core/partials/bill_vote_counts.html', {'bill': bill})
 
 
-def download_report(request, bill_id):
-    bill = get_object_or_404(Bill, id=bill_id, status=Bill.Status.PUBLISHED)
-    total_votes = bill.support_count + bill.oppose_count
-    if total_votes < 50:
-        return JsonResponse({
-            'status': 'not_ready',
-            'message': f"Community insights unlock after 50 votes. {50 - total_votes} more votes needed."
-        }, status=425)
-    if bill.report_generation_in_progress:
-        return JsonResponse({
-            'status': 'processing',
-            'message': 'Generating Report... Please check again shortly.'
-        }, status=202)
-    if not bill.pdf_report:
-        return JsonResponse({
-            'status': 'not_ready',
-            'message': 'Report is not ready yet. Please try again in a moment.'
-        }, status=425)
-    return FileResponse(
-        bill.pdf_report.open('rb'),
-        as_attachment=True,
-        filename=f"national_pulse_{bill.id}.pdf"
-    )
-
-
 def national_pulse_status(request, bill_id):
     bill = get_object_or_404(Bill, id=bill_id, status=Bill.Status.PUBLISHED)
     total_votes = bill.support_count + bill.oppose_count
-    votes_needed = max(0, 50 - total_votes)
+    verified_votes = bill.verified_support_count + bill.verified_oppose_count
+    votes_needed = max(0, 50 - verified_votes)
     return JsonResponse({
         'total_votes': total_votes,
+        'verified_votes': verified_votes,
         'votes_needed': votes_needed,
-        'eligible': total_votes >= 50,
+        'eligible': verified_votes >= 50,
         'is_generating': bill.report_generation_in_progress,
         'is_ready': bool(bill.pdf_report) and not bill.report_generation_in_progress
     })
 
 
-def get_gemini_client():
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise ValueError("GEMINI_API_KEY is missing.")
-    return genai.Client(api_key=api_key)
-
-
-@login_required
-def generate_bill_pdf(request, bill_id):
-    # PDF generation allowed for Active AND Closed (<30 days) bills
+def bill_ledger_view(request, bill_id):
     bill = get_object_or_404(Bill, id=bill_id, status=Bill.Status.PUBLISHED)
+    q = (request.GET.get("q") or "").strip().lower()
+    votes = (
+        BillVote.objects.filter(bill=bill)
+        .select_related("user__profile")
+        .order_by("-created_at")
+    )
+    if q:
+        votes = votes.filter(receipt_id__icontains=q)
 
-    votes = BillVote.objects.filter(bill=bill).exclude(reason__isnull=True).exclude(reason__exact='')
+    rows = [
+        {
+            "receipt_id": v.receipt_id,
+            "vote_type": v.vote_type,
+            "created_at": v.created_at,
+            "verification_status": "Verified Citizen"
+            if bool(getattr(getattr(v.user, "profile", None), "is_kenyan", False))
+            else "Guest Pulse",
+        }
+        for v in votes
+    ]
+    paginator = Paginator(rows, 30)
+    page_obj = paginator.get_page(request.GET.get("page"))
 
-    if not votes.exists():
-        return JsonResponse({'error': 'Insufficient participation data to generate a meaningful report.'}, status=400)
-
-    try:
-        client = get_gemini_client()
-        perspective_data = "\n".join([f"- {v.reason}" for v in votes[:40]])
-
-        config = types.GenerateContentConfig(
-            system_instruction="You are a Kenyan policy analyst. Summarize public sentiment. Return JSON: 'executive_summary', 'top_concerns' (list), 'overall_sentiment'.",
-            response_mime_type="application/json",
-            temperature=0.3
-        )
-
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=f"Analyze perspectives for: {bill.title}\n\nData:\n{perspective_data}",
-            config=config
-        )
-        analysis = json.loads(response.text)
-    except Exception:
-        return JsonResponse({'error': 'PDF generation failed.'}, status=503)
-
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-
-    p.saveState()
-    p.setFont("Helvetica-Bold", 60)
-    p.setFillAlpha(0.05)
-    p.translate(width / 2, height / 2)
-    p.rotate(45)
-    p.drawCentredString(0, 0, "VOICED.")
-    p.restoreState()
-
-    p.setFont("Helvetica-Bold", 24)
-    p.drawString(50, height - 80, "LEGISLATIVE REPORT")
-    p.setStrokeColor(colors.red)
-    p.setLineWidth(2)
-    p.line(50, height - 90, 150, height - 90)
-
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, height - 130, f"BILL: {bill.title.upper()}")
-    p.setFont("Helvetica", 10)
-    p.setFillColor(colors.grey)
-    p.drawString(50, height - 150,
-                 f"Total Support: {bill.support_count} | Total Oppose: {bill.oppose_count} | Sentiment: {analysis.get('overall_sentiment', 'N/A')}")
-
-    p.setFillColor(colors.black)
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, height - 190, "EXECUTIVE SUMMARY")
-
-    p.setFont("Helvetica", 11)
-    text_object = p.beginText(50, height - 210)
-    text_object.setLeading(14)
-
-    summary = analysis.get('executive_summary', '')
-    for line in summary.split('.'):
-        if line.strip():
-            text_object.textLine(line.strip() + ".")
-
-    text_object.moveCursor(0, 20)
-    text_object.setFont("Helvetica-Bold", 11)
-    text_object.textLine("PRIMARY CITIZEN CONCERNS:")
-    text_object.setFont("Helvetica", 11)
-
-    for concern in analysis.get('top_concerns', []):
-        text_object.textLine(f"- {concern}")
-
-    p.drawText(text_object)
-    p.showPage()
-    p.save()
-    buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename=f"Voiced_Report_{bill.id}.pdf")
+    return render(
+        request,
+        "core/bill_ledger.html",
+        {
+            "bill": bill,
+            "page_obj": page_obj,
+            "search_query": q,
+            "total_rows": len(rows),
+        },
+    )
 
 
-@login_required
-def generate_write_up(request, bill_id):
+def bill_ledger_csv_export(request, bill_id):
     bill = get_object_or_404(Bill, id=bill_id, status=Bill.Status.PUBLISHED)
-    if bill.is_closed:
-        return JsonResponse({'error': 'This bill is closed. Draft generation is disabled.'}, status=403)
-
-    user_vote = BillVote.objects.filter(bill=bill, user=request.user).first()
-    if not user_vote or not user_vote.reason:
-        return JsonResponse({
-            'status': 'not_ready',
-            'error': 'You must cast a vote with a reason to generate a submission.'
-        }, status=425)
-
-    try:
-        client = get_gemini_client()
-        config = types.GenerateContentConfig(
-            system_instruction="Draft a formal petition letter to the Clerk of the National Assembly of Kenya. Return JSON with key: 'draft'.",
-            response_mime_type="application/json",
-            temperature=0.5
+    votes = (
+        BillVote.objects.filter(bill=bill)
+        .select_related("user__profile")
+        .order_by("created_at")
+    )
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="ledger_{bill.short_id}.csv"'
+    writer = csv.writer(response)
+    writer.writerow(["receipt_id", "vote_direction", "timestamp", "verification_status"])
+    for v in votes:
+        verified = bool(getattr(getattr(v.user, "profile", None), "is_kenyan", False))
+        writer.writerow(
+            [
+                v.receipt_id,
+                v.get_vote_type_display(),
+                v.created_at.isoformat(),
+                "Verified Citizen" if verified else "Guest Pulse",
+            ]
         )
+    return response
 
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=f"Bill: {bill.title}\nUser Opinion: {user_vote.reason}",
-            config=config
-        )
-        draft_data = json.loads(response.text)
-        return JsonResponse({'draft': draft_data['draft']})
-    except Exception:
-        return JsonResponse({'error': 'Draft generation failed.'}, status=503)
+
+def bill_ledger_verify_page(request, bill_id):
+    bill = get_object_or_404(Bill, id=bill_id, status=Bill.Status.PUBLISHED)
+    return render(
+        request,
+        "core/bill_ledger_verify.html",
+        {
+            "bill": bill,
+            "prefill_receipt": (request.GET.get("q") or "").strip(),
+        },
+    )
+
+
+def bill_ledger_lookup_json(request, bill_id):
+    bill = get_object_or_404(Bill, id=bill_id, status=Bill.Status.PUBLISHED)
+    q = (request.GET.get("q") or "").strip().lower()
+    if not q:
+        return JsonResponse({"ok": False, "error": "Receipt is required."}, status=400)
+
+    vote = (
+        BillVote.objects.filter(bill=bill, receipt_id__iexact=q)
+        .select_related("user__profile")
+        .first()
+    )
+    if not vote:
+        return JsonResponse({"ok": True, "found": False})
+
+    is_verified = bool(getattr(getattr(vote.user, "profile", None), "is_kenyan", False))
+    return JsonResponse(
+        {
+            "ok": True,
+            "found": True,
+            "receipt_id": vote.receipt_id,
+            "receipt_short": f"{vote.receipt_id[:4]}...{vote.receipt_id[-4:]}",
+            "vote_direction": vote.get_vote_type_display(),
+            "timestamp": vote.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "verification_status": "Verified Citizen" if is_verified else "Guest Pulse",
+            "ledger_url": reverse("bill_ledger", kwargs={"bill_id": str(bill.id)}),
+        }
+    )
+
+
+def bill_baraza_poster_pdf(request, bill_id):
+    bill = get_object_or_404(Bill, id=bill_id, status=Bill.Status.PUBLISHED)
+    data = generate_bill_baraza_poster_pdf(bill)
+    response = HttpResponse(data, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="baraza_poster_{bill.short_id}.pdf"'
+    return response
+
+
+def bill_baraza_poster_png(request, bill_id):
+    bill = get_object_or_404(Bill, id=bill_id, status=Bill.Status.PUBLISHED)
+    data = generate_bill_baraza_poster_png(bill)
+    response = HttpResponse(data, content_type="image/png")
+    response["Content-Disposition"] = f'attachment; filename="baraza_poster_{bill.short_id}.png"'
+    return response
